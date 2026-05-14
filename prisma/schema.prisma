@@ -1,0 +1,172 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// PostgreSQL - Lê a URL do .env
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String      @id @default(uuid())
+  nome            String
+  email           String      @unique
+
+  senha           String
+  role            String      @default("ALUNO") // 'ADMIN' | 'ALUNO'
+  matricula_ativa Boolean     @default(false)
+  created_at      DateTime    @default(now())
+  updated_at      DateTime    @updatedAt
+  deleted_at      DateTime?
+
+  // Relationships
+  matriculas      Matricula[]
+  treinos_criados Treino[]    @relation("AdminTreinos")
+  treinos_recebidos Treino[]  @relation("AlunoTreinos")
+  logs_treino     LogTreino[]
+  exames          ExameIA[]
+  logs_atividade  LogAtividade[]
+  historico_cargas HistoricoCarga[]
+
+  @@map("users")
+}
+
+model Plano {
+  id            String      @id @default(uuid())
+  nome          String
+  duracao_dias  Int
+  valor         Decimal     @db.Decimal(10, 2)
+  descricao     String?
+  created_at    DateTime    @default(now())
+  updated_at    DateTime    @updatedAt
+  deleted_at    DateTime?
+
+  matriculas    Matricula[]
+
+  @@map("planos")
+}
+
+model Matricula {
+  id               String   @id @default(uuid())
+  user_id          String
+  plano_id         String
+  data_inicio      DateTime @default(now())
+  data_vencimento  DateTime
+  status_pagamento Boolean  @default(false)
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  deleted_at       DateTime?
+
+  user             User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  plano            Plano    @relation(fields: [plano_id], references: [id], onDelete: Restrict)
+
+  @@map("matriculas")
+}
+
+model Treino {
+  id            String   @id @default(uuid())
+  admin_id      String
+  aluno_id      String?  
+  nome          String
+  descricao     String?
+  objetivo      String?  // 'Hipertrofia' | 'Cardio' | etc
+  data_inicio   DateTime?
+  data_fim      DateTime?
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+  deleted_at    DateTime?
+
+  admin         User           @relation("AdminTreinos", fields: [admin_id], references: [id])
+  aluno         User?          @relation("AlunoTreinos", fields: [aluno_id], references: [id], onDelete: Cascade)
+  sessoes       SessaoTreino[]
+
+  @@map("treinos")
+}
+
+model SessaoTreino {
+  id               String   @id @default(uuid())
+  treino_id        String
+  nome             String?
+  dia_preferencial Int?     // 0-6
+  ordem_sequencial Int
+  lista_exercicios Json?    // PostgreSQL suporta Json nativo
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+  deleted_at       DateTime?
+
+  treino           Treino      @relation(fields: [treino_id], references: [id], onDelete: Cascade)
+  logs             LogTreino[]
+
+  @@map("sessoes_treino")
+}
+
+model LogTreino {
+  id                String   @id @default(uuid())
+  aluno_id          String
+  sessao_id         String
+  duracao_segundos  Int?
+  feedback_texto    String?
+  feedback_lido     Boolean  @default(false)
+  data_conclusao    DateTime @default(now())
+  created_at        DateTime @default(now())
+  updated_at        DateTime @updatedAt
+  deleted_at        DateTime?
+
+  aluno             User         @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
+  sessao            SessaoTreino @relation(fields: [sessao_id], references: [id], onDelete: Cascade)
+
+  @@map("logs_treino")
+}
+
+model ExameIA {
+  id                 String   @id @default(uuid())
+  aluno_id           String
+  url_anexo          String
+  analise_texto      Json?    // PostgreSQL suporta JSONB nativo
+  restricoes_geradas Json?    // PostgreSQL suporta JSONB nativo
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+  deleted_at         DateTime?
+
+  aluno              User     @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
+
+  @@map("exames_ia")
+}
+
+model LogAtividade {
+  id          String   @id @default(uuid())
+  admin_id    String
+  tipo        String   // CRIAR | EDITAR | EXCLUIR
+  entidade    String   // ALUNO | TREINO | PLANO | EXAME
+  entidade_id String?
+  descricao   String
+  created_at  DateTime @default(now())
+
+  admin       User     @relation(fields: [admin_id], references: [id], onDelete: Cascade)
+
+  @@map("logs_atividade")
+}
+
+model Exercicio {
+  id         String   @id @default(uuid())
+  nome       String   @unique
+  created_at DateTime @default(now())
+
+  @@map("exercicios")
+}
+
+model HistoricoCarga {
+  id         String   @id @default(uuid())
+  aluno_id   String
+  exercicio  String
+  carga      String
+  created_at DateTime @default(now())
+
+  aluno      User     @relation(fields: [aluno_id], references: [id], onDelete: Cascade)
+
+  @@map("historico_cargas")
+}

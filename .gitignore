@@ -1,0 +1,24 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+
+# Variáveis de ambiente (exceto exemplo)
+.env*
+!.env.example
+
+# Arquivos de teste/debug manuais
+test_*.cjs
+check.cjs
+fix_ui.*
+
+# Arquivo env legado (sem ponto)
+env
+
+# Metadados do AI Studio
+metadata.json
+
+# Schema SQL redundante (já temos Prisma)
+database/schema.sql
