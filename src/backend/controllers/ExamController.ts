@@ -8,10 +8,12 @@ import { handleControllerError } from '../lib/errorHandler';
 const aiService = new AIService();
 
 const AnalyzeExamSchema = z.object({
-  examText: z.string().min(10, 'O texto do exame deve ter pelo menos 10 caracteres'),
+  examText: z.string().optional().default(""),
   url_anexo: z.string().url().optional(),
   fileData: z.string().optional(),
   fileMimeType: z.string().optional()
+}).refine(data => data.examText?.trim() || data.fileData, {
+  message: "É necessário descrever o exame ou enviar um anexo"
 });
 
 export class ExamController {

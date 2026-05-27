@@ -337,7 +337,7 @@ export function StudentDashboard({ onLogout, user, token }: Props) {
              <button 
                disabled={loadingAction}
                onClick={async () => {
-                 if (!examText.trim()) { alert('Por favor, descreva seu exame.'); return; }
+                 if (!examText.trim() && !examFileData) { alert('Por favor, descreva seu exame ou anexe um documento.'); return; }
                  setLoadingAction(true);
                  try {
                    const res = await fetch('/api/exams/analyze', {
