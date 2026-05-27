@@ -5,11 +5,12 @@ import { Dumbbell, Eye, EyeOff, LogIn } from 'lucide-react';
 interface Props {
   onLogin: (email: string, pass: string) => Promise<void>;
   onRegisterClick: () => void;
+  onForgotPasswordClick: () => void;
   error?: string;
   loading?: boolean;
 }
 
-export function LoginView({ onLogin, onRegisterClick, error, loading }: Props) {
+export function LoginView({ onLogin, onRegisterClick, onForgotPasswordClick, error, loading }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -44,7 +45,7 @@ export function LoginView({ onLogin, onRegisterClick, error, loading }: Props) {
             GYM <span className="text-white">SMARTH</span>
           </h1>
           <p className="text-gray-500 text-[10px] mt-2 font-black uppercase tracking-[0.3em]">
-            Plataforma Segura
+            Você no Controle
           </p>
         </div>
 
@@ -88,12 +89,18 @@ export function LoginView({ onLogin, onRegisterClick, error, loading }: Props) {
           </motion.button>
         </form>
 
-        <div className="mt-auto sm:mt-8 pb-4 flex items-center justify-center pt-8">
+        <div className="mt-auto sm:mt-8 pb-4 flex flex-col items-center gap-3 pt-8">
           <button 
             onClick={onRegisterClick}
             className="text-gray-500 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors"
           >
             Criar Conta de Administrador
+          </button>
+          <button 
+            onClick={onForgotPasswordClick}
+            className="text-gray-600 text-xs hover:text-gray-400 transition-colors"
+          >
+            Esqueci minha senha
           </button>
         </div>
       </div>

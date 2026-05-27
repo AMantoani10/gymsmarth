@@ -38,4 +38,18 @@ export class AuthController {
       return handleControllerError(res, error, 'Erro na recuperação de senha');
     }
   }
+
+  async resetPassword(req: Request, res: Response) {
+    try {
+      // Usando uma validação manual simples aqui, mas poderia ser adicionado ao auth.schema.ts
+      const { email, code, newPassword } = req.body;
+      if (!email || !code || !newPassword || newPassword.length < 6) {
+        return res.status(400).json({ error: 'Dados inválidos. A senha deve ter no mínimo 6 caracteres.' });
+      }
+      const result = await authService.resetPassword(email, code, newPassword);
+      return res.json(result);
+    } catch (error: any) {
+      return handleControllerError(res, error, 'Erro ao redefinir a senha');
+    }
+  }
 }

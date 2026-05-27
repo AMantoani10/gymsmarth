@@ -8,13 +8,14 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './context/AuthContext';
 import { LoginView } from './views/LoginView';
 import { RegisterAdminView } from './views/RegisterAdminView';
+import { ForgotPasswordView } from './views/ForgotPasswordView';
 import { AdminDashboard } from './views/AdminDashboard';
 import { StudentDashboard } from './views/StudentDashboard';
 
 export default function App() {
   const { user, token, login, logout } = useAuth();
   
-  const [view, setView] = useState<'login' | 'register'>('login');
+  const [view, setView] = useState<'login' | 'register' | 'forgot'>('login');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -88,11 +89,15 @@ export default function App() {
           {!user ? (
             view === 'login' ? (
               <motion.div key="login" className="w-full h-full flex flex-col" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <LoginView onLogin={handleLogin} onRegisterClick={() => { setView('register'); setError(''); }} error={error} loading={loading} />
+                <LoginView onLogin={handleLogin} onRegisterClick={() => { setView('register'); setError(''); }} onForgotPasswordClick={() => { setView('forgot'); setError(''); }} error={error} loading={loading} />
               </motion.div>
-            ) : (
+            ) : view === 'register' ? (
               <motion.div key="register" className="w-full h-full flex flex-col" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <RegisterAdminView onBack={() => { setView('login'); setError(''); }} onRegister={handleRegisterAdmin} loading={loading} error={error} />
+              </motion.div>
+            ) : (
+              <motion.div key="forgot" className="w-full h-full flex flex-col" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <ForgotPasswordView onBack={() => { setView('login'); setError(''); }} />
               </motion.div>
             )
           ) : user.role === 'ADMIN' ? (

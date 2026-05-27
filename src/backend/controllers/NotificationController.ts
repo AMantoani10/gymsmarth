@@ -7,6 +7,7 @@ export class NotificationController {
     try {
       // 1. Get Exams
       const exams = await prisma.exameIA.findMany({
+        where: { aluno: { admin_id: req.user!.id } },
         orderBy: { created_at: 'desc' },
         include: {
           aluno: { select: { id: true, nome: true, email: true } }
@@ -18,7 +19,8 @@ export class NotificationController {
         where: { 
           // @ts-ignore
           feedback_lido: false,
-          deleted_at: null
+          deleted_at: null,
+          aluno: { admin_id: req.user!.id }
         },
         include: {
           aluno: { select: { id: true, nome: true, email: true } },
@@ -67,11 +69,16 @@ export class NotificationController {
       const { type } = req.body;
 
       if (type === 'exam') {
-        const exam = await prisma.exameIA.findUnique({ where: { id }, include: { aluno: { select: { nome: true } } } });
+        const exam = await prisma.exameIA.findUnique({ where: { id }, include: { aluno: { select: { nome: true, admin_id: true } } } });
+        if (!exam || exam.aluno?.admin_id !== req.user!.id) return res.status(404).json({ error: "Exame não encontrado ou sem permissão" });
+
         await prisma.exameIA.delete({ where: { id } });
-        registrarLog({ admin_id: req.user!.id, tipo: 'EXCLUIR', entidade: 'EXAME', entidade_id: id, descricao: `Excluiu alerta IA do aluno ${exam?.aluno?.nome || 'desconhecido'}` });
+        registrarLog({ admin_id: req.user!.id, tipo: 'EXCLUIR', entidade: 'EXAME', entidade_id: id, descricao: `Excluiu alerta IA do aluno ${exam.aluno?.nome || 'desconhecido'}` });
         return res.json({ message: "Exame excluído com sucesso" });
       } else if (type === 'feedback') {
+        const feedback = await prisma.logTreino.findUnique({ where: { id }, include: { aluno: { select: { admin_id: true } } } });
+        if (!feedback || feedback.aluno?.admin_id !== req.user!.id) return res.status(404).json({ error: "Feedback não encontrado ou sem permissão" });
+
         // @ts-ignore
         await prisma.logTreino.update({
           where: { id },

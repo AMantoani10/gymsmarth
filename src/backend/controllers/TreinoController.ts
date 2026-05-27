@@ -114,6 +114,9 @@ export class TreinoController {
         }
       }
 
+      const treinoExistente = await prisma.treino.findUnique({ where: { id } });
+      if (!treinoExistente || treinoExistente.admin_id !== admin_id) return res.status(404).json({ error: 'Treino não encontrado ou sem permissão' });
+
       await prisma.treino.update({
         where: { id },
         data: {
@@ -174,6 +177,9 @@ export class TreinoController {
   async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
+      const treino = await prisma.treino.findUnique({ where: { id } });
+      if (!treino || treino.admin_id !== req.user!.id) return res.status(404).json({ error: 'Treino não encontrado ou sem permissão' });
+
       await prisma.treino.update({
         where: { id },
         data: { deleted_at: new Date() }

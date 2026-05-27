@@ -18,6 +18,7 @@ const UpdateProfileSchema = z.object({
 // Rotas de Autenticação Aberta
 router.post('/login', authController.login);
 router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password', authController.resetPassword);
 
 // Rota para criar Admin (Pode ser protegida ou pública no setup inicial)
 router.post('/register-admin', authController.registerAdmin);

@@ -13,6 +13,7 @@ export class LogController {
       const logs = await prisma.logAtividade.findMany({
         where: {
           created_at: { gte: since },
+          admin_id: req.user!.id
         },
         orderBy: { created_at: 'desc' },
         take: 50,

@@ -45,8 +45,19 @@ export class AIService {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error("[AIService] Erro na API do OpenRouter:", errorData);
-      const errorMessage = errorData?.error?.message || "Erro desconhecido na API externa";
+      console.error(`[AIService] Erro ${response.status} na API do OpenRouter:`, JSON.stringify(errorData));
+      
+      if (response.status === 401) {
+        throw { status: 401, message: 'Chave da API do OpenRouter inválida ou expirada. Verifique OPENROUTER_API_KEY no arquivo .env' };
+      }
+      if (response.status === 402) {
+        throw { status: 402, message: 'Créditos insuficientes na conta do OpenRouter.' };
+      }
+      if (response.status === 429) {
+        throw { status: 429, message: 'Limite de uso da IA atingido. Aguarde alguns minutos.' };
+      }
+      
+      const errorMessage = errorData?.error?.message || `Erro ${response.status} na API de IA`;
       throw { status: response.status, message: errorMessage };
     }
 

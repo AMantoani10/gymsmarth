@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, TextInput, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { useNavigation } from '@react-navigation/native';
 
 /**
  * Tela de Login - Estilo Dark Mode
  */
 export default function LoginScreen() {
   const { signIn } = useAuth();
+  const navigation = useNavigation<any>();
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,7 +32,7 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>GYM SMARTH</Text>
-      <Text style={styles.subtitle}>Sua força, inteligente.</Text>
+      <Text style={styles.subtitle}>Você no Controle</Text>
 
       <View style={styles.inputContainer}>
         <TextInput 
@@ -64,9 +66,20 @@ export default function LoginScreen() {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.forgotPassword}>
-        <Text style={styles.forgotText}>Esqueci minha senha</Text>
-      </TouchableOpacity>
+      <View style={styles.linksContainer}>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('RegisterAdmin')}
+        >
+          <Text style={styles.registerText}>Criar Conta de Administrador</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={styles.forgotPassword}
+          onPress={() => navigation.navigate('ForgotPassword')}
+        >
+          <Text style={styles.forgotText}>Esqueci minha senha</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 }
@@ -120,10 +133,21 @@ const styles = StyleSheet.create({
     fontSize: 18
   },
   forgotPassword: {
-    marginTop: 20
+    marginTop: 12
   },
   forgotText: {
     color: '#888',
     fontSize: 14
-  }
+  },
+  linksContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+    gap: 12,
+  },
+  registerText: {
+    color: '#FF8C00',
+    fontSize: 14,
+    fontWeight: 'bold',
+    textDecorationLine: 'underline',
+  },
 });

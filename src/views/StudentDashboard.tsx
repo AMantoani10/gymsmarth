@@ -345,10 +345,10 @@ export function StudentDashboard({ onLogout, user, token }: Props) {
                      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                      body: JSON.stringify({ examText, fileData: examFileData?.split(',')[1], fileMimeType: examFile?.type })
                    });
-                   if (!res.ok) throw new Error();
-                   alert('Exame enviado com sucesso!');
-                   setExamOverlay(false);
-                 } catch (e: any) { alert('Erro ao enviar exame.'); } 
+                   if (!res.ok) { const d = await res.json().catch(() => ({})); throw new Error(d.error || 'Erro ao enviar exame'); }
+                   alert('Exame enviado e analisado com sucesso!');
+                   setExamOverlay(false); setExamText(''); setExamFile(null); setExamFileData(null);
+                 } catch (e: any) { alert(e.message || 'Erro ao enviar exame.'); } 
                  finally { setLoadingAction(false); }
                }}
                className="w-full bg-[#FF8C00] text-black font-black uppercase py-4 rounded-xl flex items-center justify-center gap-2 mt-auto mb-8 hover:bg-[#FFA500] disabled:opacity-50"

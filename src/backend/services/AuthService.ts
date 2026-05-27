@@ -4,8 +4,10 @@ import { prisma } from '../lib/prisma';
 import { UserRepository } from '../repositories/UserRepository';
 import { LoginSchema, RegisterAdminSchema } from '../schemas/auth.schema';
 import { z } from 'zod';
+import { EmailService } from './EmailService';
 
 const userRepository = new UserRepository();
+const emailService = new EmailService();
 
 export class AuthService {
   /**
@@ -64,12 +66,15 @@ export class AuthService {
       role: 'ADMIN',
     });
 
+    // Enviar e-mail de boas-vindas
+    await emailService.sendWelcomeEmail(user.email, user.nome);
+
     return user;
   }
 
   /**
-   * Recuperação de Senha (Simulação)
-   * Gera um código e salva em cache/DB (simulado por enquanto)
+   * Recuperação de Senha
+   * Gera um código e envia por e-mail, salvando no banco.
    */
   async forgotPassword(email: string) {
     const user = await userRepository.findByEmail(email);
@@ -78,10 +83,51 @@ export class AuthService {
     }
 
     const recoveryCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15); // Expira em 15 minutos
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        recovery_code: recoveryCode,
+        recovery_code_expires: expiresAt
+      }
+    });
     
-    console.log(`[AUTH] Código de recuperação para ${email}: ${recoveryCode}`);
+    await emailService.sendPasswordRecoveryEmail(user.email, recoveryCode);
     
-    // Aqui no futuro salvaríamos no Redis ou Tabela de recuperação com expiração
-    return { message: 'Código enviado com sucesso (Cheque o console)' };
+    return { message: 'Código enviado com sucesso para o e-mail.' };
+  }
+
+  /**
+   * Redefinir Senha
+   * Valida o código e atualiza a senha.
+   */
+  async resetPassword(email: string, code: string, newPassword: string) {
+    const user = await userRepository.findByEmail(email);
+    if (!user) {
+      throw new Error('Usuário não encontrado');
+    }
+
+    if (!user.recovery_code || user.recovery_code !== code) {
+      throw new Error('Código de recuperação inválido');
+    }
+
+    if (!user.recovery_code_expires || user.recovery_code_expires < new Date()) {
+      throw new Error('O código de recuperação expirou. Solicite um novo.');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: {
+        senha: hashedPassword,
+        recovery_code: null,
+        recovery_code_expires: null
+      }
+    });
+
+    return { message: 'Senha redefinida com sucesso. Faça login com a nova senha.' };
   }
 }

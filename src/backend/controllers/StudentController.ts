@@ -6,8 +6,10 @@ import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { registrarLog } from '../services/LogService';
 import { handleControllerError } from '../lib/errorHandler';
+import { EmailService } from '../services/EmailService';
 
 const studentRepository = new StudentRepository();
+const emailService = new EmailService();
 
 const UpdateStudentSchema = z.object({
   nome: z.string().min(3, 'Nome deve ter pelo menos 3 caracteres').optional(),
@@ -32,12 +34,18 @@ export class StudentController {
             email: data.email,
             senha: hashedPassword,
             role: 'ALUNO',
-            matricula_ativa: true
+            matricula_ativa: true,
+            admin_id: req.user!.id
           }
         });
 
-        const plano = await tx.plano.findUnique({ where: { id: data.plano_id } });
-        if (!plano) throw new Error('Plano não encontrado');
+        const plano = await tx.plano.findFirst({ 
+          where: { 
+            id: data.plano_id,
+            admin_id: req.user!.id
+          } 
+        });
+        if (!plano) throw new Error('Plano não encontrado ou sem permissão');
 
         const dataInicio = data.data_inicio ? new Date(data.data_inicio) : new Date();
         let dataVencimento: Date;
@@ -61,6 +69,9 @@ export class StudentController {
         return newUser;
       });
 
+      // Send welcome email asynchronously
+      emailService.sendWelcomeEmail(student.email, student.nome).catch(console.error);
+
       registrarLog({ admin_id: req.user!.id, tipo: 'CRIAR', entidade: 'ALUNO', entidade_id: student.id, descricao: `Cadastrou o aluno ${data.nome}` });
       return res.status(201).json(student);
     } catch (error: any) {
@@ -78,7 +89,7 @@ export class StudentController {
         updateData.senha = await bcrypt.hash(data.senha, 10);
       }
 
-      const user = await prisma.user.findFirst({ where: { id, role: 'ALUNO' } });
+      const user = await prisma.user.findFirst({ where: { id, role: 'ALUNO', admin_id: req.user!.id } });
       if (!user) return res.status(404).json({ error: 'Aluno não encontrado' });
 
       const student = await prisma.user.update({
@@ -97,7 +108,7 @@ export class StudentController {
     try {
       const { id } = req.params;
       
-      const user = await prisma.user.findFirst({ where: { id, role: 'ALUNO', deleted_at: null } });
+      const user = await prisma.user.findFirst({ where: { id, role: 'ALUNO', deleted_at: null, admin_id: req.user!.id } });
       if (!user) return res.status(404).json({ error: 'Aluno não encontrado' });
 
       // Soft delete para manter consistência e liberar o e-mail para novo cadastro
@@ -119,7 +130,7 @@ export class StudentController {
 
   async list(req: Request, res: Response) {
     try {
-      const students = await studentRepository.listAll();
+      const students = await studentRepository.listAll(req.user!.id);
       return res.json(students);
     } catch (error: any) {
       return handleControllerError(res, error, 'Erro ao listar alunos');
@@ -131,7 +142,7 @@ export class StudentController {
       const { id } = req.params;
       
       const user = await prisma.user.findFirst({ 
-        where: { id, role: 'ALUNO', deleted_at: null },
+        where: { id, role: 'ALUNO', deleted_at: null, admin_id: req.user!.id },
         include: { matriculas: { include: { plano: true }, orderBy: { data_vencimento: 'desc' }, take: 1 } }
       });
       if (!user) return res.status(404).json({ error: 'Aluno não encontrado' });

@@ -782,22 +782,23 @@ export function AdminDashboard({ onLogout, user, token }: Props) {
 
                      <div className="flex gap-3 p-5 border-t border-[#333]">
                        <button
-                         onClick={() => setView('workouts')}
-                         className="flex-1 bg-[#FF8C00]/10 text-[#FF8C00] border border-[#FF8C00]/30 px-4 py-3 rounded-xl text-xs font-black uppercase hover:bg-[#FF8C00]/20 transition-colors"
-                       >
-                         Ver Treinos
-                       </button>
-                       <button
                          onClick={() => {
-                           setFormData({
-                             aluno_id: selectedExam.aluno_id,
-                             sessoes: [{ nome: 'Treino A', ordem_sequencial: 1, dia_preferencial: '', exercicios: [{ nome: '', series: '', reps: '', descanso: '' }] }]
-                           });
+                           const alunoId = selectedExam.aluno?.id;
+                           const existingWorkout = data.workouts?.find((w: any) => w.aluno_id === alunoId);
+                           if (existingWorkout) {
+                             setFormData(existingWorkout);
+                           } else {
+                             setFormData({
+                               aluno_id: alunoId,
+                               sessoes: [{ nome: 'Treino A', ordem_sequencial: 1, dia_preferencial: '', exercicios: [{ nome: '', series: '', reps: '', descanso: '' }] }]
+                             });
+                           }
                            setCreateType('workout');
+                           setSelectedExam(null); // Fecha o modal de detalhes
                          }}
                          className="flex-1 bg-green-500/10 text-green-500 border border-green-500/30 px-4 py-3 rounded-xl text-xs font-black uppercase hover:bg-green-500/20 transition-colors"
                        >
-                         Criar Treino Adaptado
+                         Adaptar Treino
                        </button>
                        <button
                          onClick={async () => {

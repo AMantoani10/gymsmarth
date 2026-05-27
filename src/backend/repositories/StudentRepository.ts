@@ -6,9 +6,9 @@ export class StudentRepository {
     return prisma.user.create({ data: { ...data, role: 'ALUNO' } });
   }
 
-  async listAll() {
+  async listAll(admin_id: string) {
     const students = await prisma.user.findMany({ 
-      where: { role: 'ALUNO', deleted_at: null },
+      where: { role: 'ALUNO', deleted_at: null, admin_id },
       include: { 
         matriculas: {
           include: { plano: true },
@@ -28,9 +28,9 @@ export class StudentRepository {
     });
   }
 
-  async findById(id: string) {
-    const student = await prisma.user.findUnique({
-      where: { id },
+  async findById(id: string, admin_id: string) {
+    const student = await prisma.user.findFirst({
+      where: { id, admin_id },
       include: {
         matriculas: { include: { plano: true }, orderBy: { created_at: 'desc' } },
         treinos_recebidos: { where: { deleted_at: null }, orderBy: { created_at: 'desc' } },

@@ -8,7 +8,7 @@ export class PlanController {
   async create(req: Request, res: Response) {
     try {
       const data = CreatePlanSchema.parse(req.body);
-      const plan = await prisma.plano.create({ data });
+      const plan = await prisma.plano.create({ data: { ...data, admin_id: req.user!.id } });
       registrarLog({ admin_id: req.user!.id, tipo: 'CRIAR', entidade: 'PLANO', entidade_id: plan.id, descricao: `Criou o plano ${data.nome}` });
       return res.status(201).json(plan);
     } catch (error: any) {
@@ -20,9 +20,13 @@ export class PlanController {
     try {
       const data = CreatePlanSchema.parse(req.body);
       const { id } = req.params;
+
+      const existingPlan = await prisma.plano.findFirst({ where: { id, admin_id: req.user!.id } });
+      if (!existingPlan) return res.status(404).json({ error: 'Plano não encontrado ou sem permissão' });
+
       const plan = await prisma.plano.update({
         where: { id },
-        data
+        data: { ...data }
       });
       registrarLog({ admin_id: req.user!.id, tipo: 'EDITAR', entidade: 'PLANO', entidade_id: id, descricao: `Editou o plano ${data.nome}` });
       return res.json(plan);
@@ -34,6 +38,9 @@ export class PlanController {
   async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
+
+      const existingPlan = await prisma.plano.findFirst({ where: { id, admin_id: req.user!.id } });
+      if (!existingPlan) return res.status(404).json({ error: 'Plano não encontrado ou sem permissão' });
 
       const alunosAtivosNoPlano = await prisma.matricula.count({
         where: {
@@ -60,7 +67,7 @@ export class PlanController {
   async list(req: Request, res: Response) {
     try {
       const plans = await prisma.plano.findMany({
-        where: { deleted_at: null },
+        where: { deleted_at: null, admin_id: req.user!.id },
         orderBy: { created_at: 'desc' },
         include: {
           _count: {

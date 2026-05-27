@@ -49,18 +49,34 @@ export class ExamController {
       });
 
     } catch (error: any) {
-      console.error("Erro na análise de IA:", error);
+      console.error("Erro na análise de IA:", error?.message || error);
       
-      // Verifica erros de quota/rate limit da API
-      const isQuotaError = error?.status === 429 || error?.message?.includes('quota') || error?.message?.includes('RESOURCE_EXHAUSTED');
-      
-      if (isQuotaError) {
+      // Erros específicos da API de IA (401, 402, 429)
+      if (error?.status === 401) {
+        return res.status(503).json({ 
+          error: "Chave da API de IA inválida ou expirada. Contate o administrador do sistema."
+        });
+      }
+      if (error?.status === 402) {
+        return res.status(503).json({ 
+          error: "Créditos de IA esgotados. Contate o administrador do sistema."
+        });
+      }
+      if (error?.status === 429) {
         return res.status(429).json({ 
           error: "Limite de uso da IA atingido. Aguarde alguns minutos e tente novamente."
         });
       }
 
-      return handleControllerError(res, error, "Falha ao processar exame com IA");
+      // Erro de validação Zod
+      if (error?.name === 'ZodError') {
+        return handleControllerError(res, error);
+      }
+
+      // Erro genérico
+      return res.status(500).json({ 
+        error: error?.message || "Falha ao processar exame com IA. Tente novamente."
+      });
     }
   }
 
@@ -82,6 +98,9 @@ export class ExamController {
   async listAll(req: Request, res: Response) {
     try {
       const exams = await prisma.exameIA.findMany({
+        where: {
+          aluno: { admin_id: req.user!.id }
+        },
         orderBy: { created_at: 'desc' },
         include: {
           aluno: { select: { id: true, nome: true, email: true } }
@@ -96,9 +115,9 @@ export class ExamController {
   async delete(req: Request, res: Response) {
     try {
       const { id } = req.params;
-      const exam = await prisma.exameIA.findUnique({ where: { id }, include: { aluno: { select: { nome: true } } } });
+      const exam = await prisma.exameIA.findUnique({ where: { id }, include: { aluno: { select: { nome: true, admin_id: true } } } });
       
-      if (!exam) return res.status(404).json({ error: "Exame não encontrado" });
+      if (!exam || exam.aluno?.admin_id !== req.user!.id) return res.status(404).json({ error: "Exame não encontrado ou sem permissão" });
 
       await prisma.exameIA.delete({ where: { id } });
       registrarLog({ admin_id: req.user!.id, tipo: 'EXCLUIR', entidade: 'EXAME', entidade_id: id, descricao: `Excluiu alerta IA do aluno ${exam?.aluno?.nome || 'desconhecido'}` });

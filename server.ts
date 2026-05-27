@@ -5,6 +5,7 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import cors from "cors";
 import routes from "./src/backend/routes";
+import { verifyEmailConnection } from "./src/backend/services/EmailService";
 
 dotenv.config();
 
@@ -15,20 +16,20 @@ async function startServer() {
   const app = express();
   const PORT = parseInt(process.env.PORT || '3000', 10);
 
-  // CORS — restrito às origens permitidas
-  const allowedOrigins = [
-    `http://localhost:${PORT}`,
-    process.env.APP_URL || `http://localhost:${PORT}`,
-  ].filter(Boolean);
-
+  // CORS — permite origens locais e dispositivos na rede (mobile)
   app.use(cors({
     origin: (origin, callback) => {
-      // Permite requests sem origin (Postman, server-side, mobile)
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Origem não permitida pelo CORS'));
-      }
+      // Permite requests sem origin (Postman, server-side, mobile apps)
+      if (!origin) return callback(null, true);
+      // Permite localhost, rede local e Expo
+      const allowed =
+        origin.includes('localhost') ||
+        origin.includes('127.0.0.1') ||
+        origin.match(/^http:\/\/192\.168\.\d+\.\d+/) ||
+        origin.match(/^http:\/\/10\.\d+\.\d+\.\d+/) ||
+        origin.match(/^http:\/\/172\.(1[6-9]|2\d|3[01])\.\d+\.\d+/) ||
+        origin.includes('expo');
+      callback(null, !!allowed);
     },
     credentials: true,
   }));
@@ -122,8 +123,10 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
+  app.listen(PORT, "0.0.0.0", async () => {
     console.log(`🚀 Server Gym Smarth ready at http://localhost:${PORT}`);
+    // Verifica credenciais de e-mail na inicialização
+    await verifyEmailConnection();
   });
 }
 

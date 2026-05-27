@@ -15,9 +15,9 @@ const STORAGE_KEY_USER = 'gymsmarth_user';
  * Para dispositivo real, substitua pelo IP da sua máquina na rede local.
  */
 export const API_BASE_URL = Platform.select({
-  android: 'http://192.168.1.107:3000', // IP da sua máquina
-  ios: 'http://192.168.1.107:3000',
-  default: 'http://192.168.1.107:3000',
+  android: 'http://192.168.1.113:3000', // IP da sua máquina
+  ios: 'http://192.168.1.113:3000',
+  default: 'http://192.168.1.113:3000',
 });
 
 export interface User {
@@ -63,23 +63,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const signIn = useCallback(async (email: string, senha: string) => {
-    const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, senha }),
-    });
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
-    const data = await res.json();
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, senha }),
+        signal: controller.signal,
+      });
 
-    if (!res.ok) {
-      throw new Error(data.error || 'Credenciais inválidas');
+      clearTimeout(timeout);
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Credenciais inválidas');
+      }
+
+      setToken(data.token);
+      setUser(data.user);
+
+      await AsyncStorage.setItem(STORAGE_KEY_TOKEN, data.token);
+      await AsyncStorage.setItem(STORAGE_KEY_USER, JSON.stringify(data.user));
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        throw new Error('Timeout: servidor não respondeu. Verifique se o servidor está rodando.');
+      }
+      if (error.message?.includes('Network request failed')) {
+        throw new Error(`Sem conexão com o servidor (${API_BASE_URL}). Verifique se o servidor está rodando e se o IP está correto.`);
+      }
+      throw error;
     }
-
-    setToken(data.token);
-    setUser(data.user);
-
-    await AsyncStorage.setItem(STORAGE_KEY_TOKEN, data.token);
-    await AsyncStorage.setItem(STORAGE_KEY_USER, JSON.stringify(data.user));
   }, []);
 
   const signOut = useCallback(async () => {
