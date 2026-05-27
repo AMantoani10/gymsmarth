@@ -1,3 +1,17 @@
+/**
+ * AuthContext.tsx — Estado global de autenticação (Frontend Web)
+ *
+ * Usa a Context API do React para compartilhar dados de autenticação
+ * entre todos os componentes sem prop drilling.
+ *
+ * Funcionalidades:
+ * - Persiste token e user no localStorage (sobrevive a reload da página)
+ * - Restaura sessão ao carregar a aplicação (useEffect no mount)
+ * - Expõe login() e logout() para manipular o estado
+ * - useAuth() é o hook customizado para acessar o contexto
+ *
+ * Dados do contexto: { user, token, login, logout }
+ */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 type User = {

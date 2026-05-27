@@ -1,3 +1,14 @@
+/**
+ * PlanController.ts — Controller de Planos de Matrícula
+ *
+ * CRUD completo de planos (Mensal, Trimestral, etc.):
+ * - POST /api/admin/plans      → Cria novo plano
+ * - GET /api/admin/plans       → Lista planos do admin (com contagem de alunos ativos)
+ * - PUT /api/admin/plans/:id   → Atualiza plano existente
+ * - DELETE /api/admin/plans/:id → Soft delete (impede se há alunos ativos)
+ *
+ * Cada ação é registrada no LogService para auditoria.
+ */
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { CreatePlanSchema } from '../schemas/admin.schema';

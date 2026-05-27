@@ -1,3 +1,14 @@
+/**
+ * UserRepository.ts — Repositório de Usuários genérico
+ *
+ * Encapsula queries Prisma para operações básicas com usuários.
+ * Usado principalmente pelo AuthService para login e registro.
+ *
+ * Métodos:
+ * - create: Cria um novo usuário no banco
+ * - findByEmail: Busca usuário por email (ignora deletados)
+ * - findById: Busca usuário por ID (ignora deletados)
+ */
 import { prisma } from "../lib/prisma";
 import { Prisma, User } from "@prisma/client";
 

@@ -1,3 +1,15 @@
+/**
+ * routes/index.ts — Agregador central de rotas
+ *
+ * Monta todas as sub-rotas sob o prefixo /api:
+ * - /api/auth/*     → Autenticação (login, registro, recuperação de senha)
+ * - /api/admin/*    → Operações do admin (alunos, planos, treinos, exames, notificações)
+ * - /api/exams/*    → Exames do aluno (enviar e listar)
+ * - /api/workouts/* → Sugestão de treino via IA (admin)
+ * - /api/training/* → Treino do aluno (sessões, carga, log)
+ *
+ * Importado pelo server.ts com: app.use("/api", routes)
+ */
 import { Router } from 'express';
 import authRoutes from './auth.routes';
 import examRoutes from './exam.routes';

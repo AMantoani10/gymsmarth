@@ -1,3 +1,16 @@
+/**
+ * StudentRepository.ts — Repositório de Alunos
+ *
+ * Encapsula queries Prisma específicas para alunos (role = 'ALUNO').
+ * Diferente do UserRepository, este inclui dados de matrícula e treinos.
+ *
+ * Métodos:
+ * - create: Cria um aluno (força role='ALUNO')
+ * - listAll: Lista todos os alunos de um admin, com matrículas e treinos incluídos
+ * - findById: Busca um aluno por ID com todos os relacionamentos
+ *
+ * Segurança: A senha é removida do retorno para nunca expor ao frontend.
+ */
 import { prisma } from "../lib/prisma";
 import { Prisma, User } from "@prisma/client";
 

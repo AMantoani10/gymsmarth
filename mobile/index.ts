@@ -1,3 +1,9 @@
+/**
+ * index.ts — Entry point do app Expo
+ *
+ * Registra o componente raiz (App) usando registerRootComponent.
+ * Isso garante que o app funciona tanto no Expo Go quanto em builds nativos.
+ */
 import { registerRootComponent } from 'expo';
 
 import App from './App';

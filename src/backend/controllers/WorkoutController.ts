@@ -1,3 +1,16 @@
+/**
+ * WorkoutController.ts — Controller de Sugestão de Treino por IA
+ *
+ * Endpoint:
+ * - POST /api/workouts/suggest → Gera sugestão de treino personalizada via IA
+ *
+ * O admin informa o ID do aluno e o objetivo (ex: "Hipertrofia").
+ * O sistema busca o último exame do aluno, extrai as restrições,
+ * e envia tudo para o AIService que gera uma sessão de treino
+ * respeitando as limitações médicas.
+ *
+ * Somente admins podem acessar este endpoint.
+ */
 import { Request, Response } from 'express';
 import { AIService } from '../services/AIService';
 import { prisma } from '../lib/prisma';

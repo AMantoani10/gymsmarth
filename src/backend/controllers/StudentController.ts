@@ -1,3 +1,16 @@
+/**
+ * StudentController.ts — Controller de Alunos
+ *
+ * CRUD completo de alunos + renovação de matrícula:
+ * - POST /api/admin/students         → Cria aluno + matrícula (transação atômica)
+ * - GET /api/admin/students          → Lista alunos do admin
+ * - PUT /api/admin/students/:id      → Atualiza dados do aluno
+ * - DELETE /api/admin/students/:id   → Soft delete (libera e-mail para reuso)
+ * - POST /api/admin/students/:id/renew → Renova matrícula baseada no plano atual
+ *
+ * A criação usa $transaction do Prisma para garantir que o aluno
+ * e a matrícula sejam criados juntos ou nenhum dos dois.
+ */
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import { StudentRepository } from '../repositories/StudentRepository';

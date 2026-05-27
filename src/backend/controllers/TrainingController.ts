@@ -1,3 +1,18 @@
+/**
+ * TrainingController.ts — Controller de Treino do Aluno
+ *
+ * Endpoints usados pelo aluno para acessar e executar seus treinos:
+ * - GET /api/training/next          → Retorna a próxima sessão de treino (rotação automática)
+ * - GET /api/training/all           → Retorna o treino ativo com todas as sessões
+ * - POST /api/training/log          → Registra conclusão de sessão com feedback
+ * - POST /api/training/carga        → Salva carga de um exercício no histórico
+ * - GET /api/training/carga/:exercicio → Retorna histórico de cargas por exercício
+ *
+ * A rotação de sessões funciona assim: encontra a última sessão concluída
+ * e avança para a próxima (volta ao início ao completar todas).
+ *
+ * Verifica matrícula ativa antes de liberar acesso aos treinos.
+ */
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';

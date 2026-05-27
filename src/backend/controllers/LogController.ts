@@ -1,3 +1,12 @@
+/**
+ * LogController.ts — Controller de Logs de Atividade
+ *
+ * Endpoint:
+ * - GET /api/admin/logs?dias=7 → Lista as últimas atividades do admin
+ *
+ * Retorna no máximo 50 logs dentro do período especificado.
+ * Usado no painel "Atividade Recente" do dashboard admin.
+ */
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 

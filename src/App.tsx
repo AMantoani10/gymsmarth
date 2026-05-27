@@ -3,6 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+/**
+ * App.tsx — Componente raiz da aplicação React
+ *
+ * Funciona como um "roteador" manual baseado no estado de autenticação:
+ * - Não logado: Mostra LoginView, RegisterAdminView ou ForgotPasswordView
+ * - Logado como ADMIN: Mostra AdminDashboard (tela cheia)
+ * - Logado como ALUNO: Mostra StudentDashboard (formato mobile/smartphone)
+ *
+ * Gerencia o fluxo de login/registro e usa AnimatePresence do Framer Motion
+ * para transições suaves entre as views.
+ *
+ * O layout externo simula um "dispositivo" com bordas arredondadas para o aluno,
+ * enquanto o admin ocupa a tela inteira.
+ */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAuth } from './context/AuthContext';

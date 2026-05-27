@@ -1,3 +1,19 @@
+/**
+ * server.ts — Ponto de entrada principal do Gym Smarth
+ *
+ * Este arquivo inicializa e configura o servidor Express que serve tanto a
+ * API REST (backend) quanto o frontend React (via Vite em dev, ou static em prod).
+ *
+ * Responsabilidades:
+ * - Configuração do CORS para aceitar requests do mobile e web
+ * - Rate limiting simples para proteger a API contra abuso
+ * - Validação de variáveis de ambiente essenciais
+ * - Registro das rotas da API em /api/*
+ * - Middleware do Vite (em dev) para servir o frontend com HMR
+ * - Tratamento global de erros
+ *
+ * Executado via: npm run dev (que roda "tsx server.ts")
+ */
 import express, { Request, Response, NextFunction } from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";

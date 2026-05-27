@@ -1,3 +1,16 @@
+/**
+ * ExamController.ts — Controller de Exames Médicos
+ *
+ * Gerencia o envio e análise de exames médicos pela IA:
+ * - POST /api/exams/analyze  → Aluno envia exame; IA analisa e extrai restrições
+ * - GET /api/exams/my-exams  → Aluno lista seus próprios exames
+ * - GET /api/admin/exams     → Admin lista exames dos seus alunos
+ * - DELETE /api/admin/exams/:id → Admin exclui um exame
+ *
+ * O texto/imagem do exame é enviado para o AIService (OpenRouter),
+ * que retorna diagnósticos, restrições de movimento e nível de alerta.
+ * O resultado completo é salvo no banco em campos JSON (PostgreSQL).
+ */
 import { Request, Response } from 'express';
 import { AIService } from '../services/AIService';
 import { prisma } from '../lib/prisma';

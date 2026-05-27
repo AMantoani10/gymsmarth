@@ -1,3 +1,12 @@
+/**
+ * admin.schema.ts — Schemas de Validação para operações Admin
+ *
+ * Define schemas Zod para validar dados ao criar alunos e planos.
+ *
+ * Schemas:
+ * - CreateStudentSchema: nome, email, senha, plano_id (UUID), datas opcionais
+ * - CreatePlanSchema: nome do plano, duração em dias, valor, descrição opcional
+ */
 import { z } from 'zod';
 
 export const CreateStudentSchema = z.object({

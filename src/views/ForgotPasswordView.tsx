@@ -1,3 +1,12 @@
+/**
+ * ForgotPasswordView.tsx — Tela de Recuperação de Senha (2 etapas)
+ *
+ * Etapa 1: Usuário informa o email → backend envia código de 6 dígitos por e-mail
+ * Etapa 2: Usuário informa código + nova senha → backend valida e redefine
+ *
+ * Após redefinição, redireciona para login automaticamente após 2 segundos.
+ * Faz fetch diretamente para /api/auth/forgot-password e /api/auth/reset-password.
+ */
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, Mail, KeyRound } from 'lucide-react';

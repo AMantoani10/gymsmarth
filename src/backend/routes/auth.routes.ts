@@ -1,3 +1,15 @@
+/**
+ * auth.routes.ts — Rotas de Autenticação
+ *
+ * Rotas públicas (sem token):
+ * - POST /api/auth/login          → Login
+ * - POST /api/auth/register-admin → Criar admin
+ * - POST /api/auth/forgot-password → Enviar código de recuperação
+ * - POST /api/auth/reset-password  → Redefinir senha
+ *
+ * Rota protegida (requer token):
+ * - PUT /api/auth/profile → Atualizar perfil (nome, email, senha)
+ */
 import { Router } from 'express';
 import { AuthController } from '../controllers/AuthController';
 import { authMiddleware } from '../middlewares/auth';

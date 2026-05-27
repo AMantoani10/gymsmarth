@@ -1,3 +1,14 @@
+/**
+ * NotificationController.ts — Controller de Notificações do Admin
+ *
+ * Combina dois tipos de notificação em uma lista unificada e cronológica:
+ * 1. Exames de IA: Alertas quando alunos enviam exames médicos
+ * 2. Feedbacks de Treino: Comentários deixados pelos alunos ao finalizar sessões
+ *
+ * Endpoints:
+ * - GET /api/admin/notifications         → Lista todas as notificações
+ * - POST /api/admin/notifications/:id/dismiss → Exclui exame ou marca feedback como lido
+ */
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { registrarLog } from '../services/LogService';

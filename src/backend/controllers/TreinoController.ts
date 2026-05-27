@@ -1,3 +1,18 @@
+/**
+ * TreinoController.ts — Controller de Treinos (lado Admin)
+ *
+ * CRUD de treinos com sessões e exercícios (somente admin):
+ * - POST /api/admin/treinos      → Cria treino com sessões e exercícios
+ * - GET /api/admin/treinos       → Lista todos os treinos do admin
+ * - PUT /api/admin/treinos/:id   → Atualiza treino (adiciona/remove/edita sessões)
+ * - DELETE /api/admin/treinos/:id → Soft delete do treino
+ * - GET /api/admin/exercicios    → Lista catálogo global de exercícios (autocomplete)
+ *
+ * Cada treino contém N sessões (Treino A, B, C...), e cada sessão
+ * contém uma lista de exercícios armazenada como JSON no PostgreSQL.
+ *
+ * Ao criar/editar, novos exercícios são automaticamente salvos no catálogo global.
+ */
 import { Request, Response } from 'express';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';

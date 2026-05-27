@@ -1,3 +1,11 @@
+/**
+ * admin.routes.ts — Rotas protegidas do Administrador
+ *
+ * TODAS as rotas aqui exigem: authMiddleware + isAdmin.
+ * Ou seja, apenas usuários logados com role='ADMIN' acessam.
+ *
+ * Agrupa CRUD de planos, treinos, alunos, exames, notificações e logs.
+ */
 import { Router } from 'express';
 import { PlanController } from '../controllers/PlanController';
 import { TreinoController } from '../controllers/TreinoController';

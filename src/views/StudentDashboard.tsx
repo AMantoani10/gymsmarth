@@ -1,3 +1,17 @@
+/**
+ * StudentDashboard.tsx — Painel do Aluno (Frontend Web)
+ *
+ * Interface completa do aluno com as seguintes funcionalidades:
+ * - Visualização de todas as sessões de treino
+ * - Execução de sessão: marcar exercícios como concluídos
+ * - Registro de carga por exercício (com histórico)
+ * - Envio de exames médicos para análise por IA
+ * - Feedback de sessão (comentário para o professor)
+ * - Configurações de perfil (nome, email, senha)
+ *
+ * Layout otimizado para formato mobile (simula smartphone no desktop).
+ * Usa overlays (modais full-screen) para envio de exame, feedback e configurações.
+ */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { User, Activity, BrainCircuit, ShieldAlert, FileText, Send, LogOut, CheckCircle, ChevronRight } from 'lucide-react';

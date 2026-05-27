@@ -1,3 +1,13 @@
+/**
+ * LoginView.tsx — Tela de Login
+ *
+ * Interface de login com campos de email e senha.
+ * Inclui ícone animado do Gym Smarth, toggle de visibilidade da senha,
+ * botões para criar conta de admin e recuperar senha.
+ *
+ * Não faz fetch diretamente — delega para App.tsx via callback onLogin().
+ * Usa Framer Motion para animações de entrada/saída.
+ */
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { Dumbbell, Eye, EyeOff, LogIn } from 'lucide-react';

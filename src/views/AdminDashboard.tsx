@@ -1,3 +1,21 @@
+/**
+ * AdminDashboard.tsx — Painel do Administrador (Frontend Web)
+ *
+ * Dashboard completo com sidebar de navegação e múltiplas abas:
+ * - Home: Visão geral com cards de estatísticas, gráfico de crescimento e timeline de atividade
+ * - Alunos: CRUD de alunos com matrícula e renovação
+ * - Planos: CRUD de planos de matrícula
+ * - Treinos: CRUD de treinos com sessões/exercícios + sugestão de treino por IA
+ * - Notificações: Exames de IA e feedbacks de alunos em lista unificada
+ * - Configurações: Atualização de perfil do admin
+ *
+ * Componente grande (~1300 linhas) que gerencia toda a interface admin.
+ * Faz fetches diretamente para /api/admin/*.
+ *
+ * NOTA DE OTIMIZAÇÃO: Este componente poderia ser dividido em sub-componentes
+ * menores por aba (StudentsTab, PlansTab, WorkoutsTab, etc.) para melhor
+ * manutenibilidade e performance.
+ */
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Users, CreditCard, Dumbbell, ChevronRight, Plus, LogOut, Settings, Search, Trash2, BrainCircuit, X, Bell, Clock, Edit, UserPlus, UserMinus } from 'lucide-react';

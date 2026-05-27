@@ -1,3 +1,12 @@
+/**
+ * RegisterAdminView.tsx — Tela de Cadastro de Administrador
+ *
+ * Formulário para criar uma nova conta de administrador.
+ * Campos: nome, email, senha e confirmação de senha.
+ * Valida localmente se as senhas coincidem e têm 6+ caracteres.
+ *
+ * Após registro bem-sucedido, faz auto-login via App.tsx.
+ */
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';

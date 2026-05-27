@@ -1,3 +1,15 @@
+/**
+ * AuthController.ts — Controller de Autenticação
+ *
+ * Gerencia os endpoints de autenticação (rotas públicas, sem token):
+ * - POST /api/auth/login          → Faz login e retorna token JWT
+ * - POST /api/auth/register-admin → Cria conta de administrador
+ * - POST /api/auth/forgot-password → Envia código de recuperação por e-mail
+ * - POST /api/auth/reset-password  → Redefine senha com código
+ *
+ * Delega a lógica de negócios para o AuthService.
+ * Usa schemas Zod para validação de entrada.
+ */
 import { Request, Response } from 'express';
 import { AuthService } from '../services/AuthService';
 import { LoginSchema, RegisterAdminSchema, ForgotPasswordSchema } from '../schemas/auth.schema';

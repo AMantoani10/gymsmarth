@@ -1,3 +1,15 @@
+/**
+ * auth.ts — Middleware de Autenticação e Autorização
+ *
+ * Contém três middlewares:
+ * - authMiddleware: Valida o token JWT do header Authorization.
+ *   Se válido, injeta os dados do usuário em req.user (id e role).
+ * - isAdmin: Verifica se o usuário tem role 'ADMIN' (403 se não).
+ * - hasRole: Middleware factory — aceita array de roles permitidas.
+ *
+ * Esses middlewares são usados nas rotas para proteger endpoints.
+ * Ex: router.use(authMiddleware, isAdmin) → só admins acessam.
+ */
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 

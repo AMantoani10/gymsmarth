@@ -1,3 +1,12 @@
+/**
+ * errorHandler.ts — Tratamento centralizado de erros em Controllers
+ *
+ * Fornece a função handleControllerError() usada por todos os controllers.
+ * Trata erros de validação Zod (retorna 400 com mensagens claras),
+ * erros de APIs externas (retorna o status original) e erros genéricos.
+ *
+ * Centralizar aqui evita repetir o mesmo try/catch em cada endpoint.
+ */
 import { Response } from 'express';
 
 /**
