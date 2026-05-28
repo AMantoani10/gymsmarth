@@ -14,16 +14,15 @@
  *
  * Executado via: npm run dev (que roda "tsx server.ts")
  */
+import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import { createServer as createViteServer } from "vite";
 import path from "path";
 import { fileURLToPath } from "url";
-import dotenv from "dotenv";
 import cors from "cors";
 import routes from "./src/backend/routes";
 import { verifyEmailConnection } from "./src/backend/services/EmailService";
 
-dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
