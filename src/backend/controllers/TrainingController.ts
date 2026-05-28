@@ -106,7 +106,12 @@ export class TrainingController {
   async getAllTrainingSessions(req: Request, res: Response) {
     try {
       const student_id = req.user?.id;
-      if (!student_id) return res.status(401).json({ error: "Não autorizado" });
+      console.log(`[TrainingController] getAllTrainingSessions called! User: ${student_id}, User-Agent: ${req.headers['user-agent']}`);
+      
+      if (!student_id) {
+         console.log(`[TrainingController] Unauthorized - No student_id`);
+         return res.status(401).json({ error: "Não autorizado" });
+      }
 
       const matricula = await prisma.matricula.findFirst({
         where: { user_id: student_id },
@@ -134,9 +139,11 @@ export class TrainingController {
       });
 
       if (!treinoAtivo || treinoAtivo.sessoes.length === 0) {
+        console.log(`[TrainingController] 404 - Nenhum treino encontrado para o aluno ${student_id}`);
         return res.status(404).json({ error: "Nenhum treino ativo encontrado." });
       }
 
+      console.log(`[TrainingController] 200 - Retornando treino ${treinoAtivo.id} com ${treinoAtivo.sessoes.length} sessões para o aluno ${student_id}`);
       return res.status(200).json(treinoAtivo);
     } catch (error: any) {
       return res.status(500).json({ error: "Erro interno.", details: error.message });

@@ -276,8 +276,10 @@ cd mobile
 # 2. Instale as dependências
 npm install
 
-# 3. Configure o IP do servidor no arquivo mobile/src/services/api.ts
-# Troque 'http://localhost:3000' pelo IP da sua máquina na rede (ex: http://192.168.1.100:3000)
+# 3. Configure as variáveis de ambiente
+cp .env.example .env
+# Abra o arquivo mobile/.env e coloque o IP da sua máquina na rede local
+# Ex: EXPO_PUBLIC_API_URL=http://192.168.1.100:3000
 
 # 4. Inicie o Expo
 npx expo start

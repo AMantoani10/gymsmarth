@@ -201,9 +201,11 @@ export default function StudentHomeScreen() {
       {/* Top Cards */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={st.topCardsScroll} contentContainerStyle={st.topCardsContent}>
         <View style={st.cardStatus}>
-           <Feather name="zap" size={20} color="#22C55E" />
+           <Feather name="zap" size={20} color={treinoAtivo?.isPaywall ? "#EF4444" : "#22C55E"} />
            <Text style={st.cardLabel}>Status Plano</Text>
-           <Text style={st.cardValueGreen}>ATIVO</Text>
+           <Text style={treinoAtivo?.isPaywall ? st.cardValueRed : st.cardValueGreen}>
+             {treinoAtivo?.isPaywall ? 'INATIVO' : 'ATIVO'}
+           </Text>
         </View>
         <TouchableOpacity style={st.cardIA} onPress={() => setExamModal(true)}>
            <Feather name="cpu" size={20} color={ORANGE} />
@@ -225,8 +227,8 @@ export default function StudentHomeScreen() {
 
              {treinoAtivo?.isPaywall ? (
                <View style={st.emptyState}>
-                 <Text style={st.emptyText}>Matrícula inativa ou expirada.</Text>
-                 <Text style={st.emptySubText}>Aguarde o Admin criar ou reativar sua assinatura.</Text>
+                 <Text style={st.emptyText}>Assinatura inativa ou expirada.</Text>
+                 <Text style={st.emptySubText}>Procure a recepção para renovar o seu plano.</Text>
                </View>
              ) : treinoAtivo && treinoAtivo.sessoes?.length > 0 ? (
                <View style={st.sessoesList}>
@@ -250,8 +252,8 @@ export default function StudentHomeScreen() {
                </View>
              ) : (
                <View style={st.emptyState}>
-                 <Text style={st.emptyText}>Nenhum treino liberado no momento.</Text>
-                 <Text style={st.emptySubText}>Aguarde o Admin criar ou reativar sua assinatura.</Text>
+                 <Text style={st.emptyText}>Treino indisponível no momento.</Text>
+                 <Text style={st.emptySubText}>Seu plano está ativo, mas o professor ainda não montou seu treino.</Text>
                </View>
              )}
           </View>
@@ -458,6 +460,7 @@ const st = StyleSheet.create({
   cardIcon: { fontSize: 18, marginBottom: 8 },
   cardLabel: { fontSize: 11, fontWeight: '700', color: '#666', marginBottom: 4 },
   cardValueGreen: { fontSize: 14, fontWeight: '900', color: '#22C55E' },
+  cardValueRed: { fontSize: 14, fontWeight: '900', color: '#EF4444' },
   cardValueOrange: { fontSize: 12, fontWeight: '900', color: ORANGE },
   content: { flex: 1, padding: 16 },
   section: { marginBottom: 20 },

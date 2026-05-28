@@ -32,6 +32,7 @@ export function StudentDashboard({ onLogout, user, token }: Props) {
   const [treinoAtivo, setTreinoAtivo] = useState<any>(null);
   const [selectedSession, setSelectedSession] = useState<any>(null);
   const [loadingSession, setLoadingSession] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [completedExercises, setCompletedExercises] = useState<number[]>([]);
   const [cargas, setCargas] = useState<Record<string, string>>({});
@@ -47,17 +48,27 @@ export function StudentDashboard({ onLogout, user, token }: Props) {
 
   React.useEffect(() => {
     fetch('/api/training/all', {
-      headers: { Authorization: `Bearer ${token}` }
+      headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store'
     })
-    .then(r => {
+    .then(async r => {
       if(r.ok) return r.json();
-      throw new Error();
+      const text = await r.text();
+      let errStr = text;
+      try { const j = JSON.parse(text); errStr = j.error || JSON.stringify(j); } catch(e){}
+      throw new Error(`[Status ${r.status}] ${errStr}`);
     })
     .then(data => {
       setTreinoAtivo(data);
+      setErrorMsg(null);
       setLoadingSession(false);
     })
-    .catch(() => setLoadingSession(false));
+    .catch((err) => {
+      console.error("Erro ao carregar treinos:", err);
+      setErrorMsg(err.message);
+      setTreinoAtivo(null);
+      setLoadingSession(false);
+    });
   }, [token]);
 
   const saveCarga = async (exercicio: string, carga: string) => {
@@ -99,9 +110,11 @@ export function StudentDashboard({ onLogout, user, token }: Props) {
 
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
           <div className="bg-[#1A1A1A] p-4 rounded-2xl min-w-[140px] border border-[#222]">
-            <Activity size={18} className="text-[#FF8C00] mb-2" />
+            <Activity size={18} className={errorMsg?.includes('403') ? "text-red-500 mb-2" : "text-[#FF8C00] mb-2"} />
             <p className="text-xs text-gray-400 font-bold mb-1">Status Plano</p>
-            <p className="text-sm font-black text-green-500 uppercase">Ativo</p>
+            <p className={`text-sm font-black uppercase ${errorMsg?.includes('403') ? "text-red-500" : "text-green-500"}`}>
+              {errorMsg?.includes('403') ? 'Inativo' : 'Ativo'}
+            </p>
           </div>
           <div 
              onClick={() => setExamOverlay(true)}
@@ -150,9 +163,24 @@ export function StudentDashboard({ onLogout, user, token }: Props) {
                 })}
               </div>
             ) : (
-                <div className="text-center text-gray-500 text-xs py-10">
-                  Nenhum treino liberado no momento. <br/><br/>
-                  Aguarde o Admin criar ou reativar sua assinatura.
+                <div className="text-center text-gray-500 text-xs py-10 px-4">
+                  {errorMsg ? (
+                     <div className={`p-4 rounded-xl border ${errorMsg.includes('403') ? 'bg-red-500/10 text-red-500 border-red-500/30' : 'bg-[#FF8C00]/10 text-[#FF8C00] border-[#FF8C00]/30'}`}>
+                       <p className="font-bold mb-2">
+                         {errorMsg.includes('403') ? 'Assinatura Inativa' : 'Treino Indisponível'}
+                       </p>
+                       <p className="break-words">
+                         {errorMsg.includes('403') 
+                           ? 'Sua matrícula está inativa ou expirada. Por favor, procure a recepção para renovar o seu plano.' 
+                           : 'Você está com o plano ativo, mas o professor ainda não liberou o seu treino. Aguarde a montagem!'}
+                       </p>
+                     </div>
+                  ) : (
+                    <>
+                      Nenhum treino liberado no momento. <br/><br/>
+                      Aguarde o Admin criar ou reativar seu treino.
+                    </>
+                  )}
                 </div>
             )}
           </div>

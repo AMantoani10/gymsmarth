@@ -6,18 +6,13 @@ const STORAGE_KEY_TOKEN = 'gymsmarth_token';
 const STORAGE_KEY_USER = 'gymsmarth_user';
 
 /**
- * URL base da API.
- * - Emulador Android: http://10.0.2.2:3000
- * - Emulador iOS:     http://localhost:3000
- * - Dispositivo real:  http://<IP-DA-SUA-MÁQUINA>:3000
- * 
- * Detecta automaticamente se é Android (emulador) ou iOS.
- * Para dispositivo real, substitua pelo IP da sua máquina na rede local.
+ * URL base da API lida das variáveis de ambiente (.env).
+ * Se a variável não estiver definida, usa um fallback inteligente.
  */
-export const API_BASE_URL = Platform.select({
-  android: 'http://192.168.1.113:3000', // IP da sua máquina
-  ios: 'http://192.168.1.113:3000',
-  default: 'http://192.168.1.113:3000',
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || Platform.select({
+  android: 'http://10.0.2.2:3000', // Emulador Android
+  ios: 'http://localhost:3000',    // Emulador iOS
+  default: 'http://localhost:3000',
 });
 
 export interface User {
