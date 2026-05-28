@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Feather } from '@expo/vector-icons';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, StyleSheet, TextInput } from 'react-native';
 import FormModal from '../../components/FormModal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import SelectPicker from '../../components/SelectPicker';
@@ -21,6 +21,7 @@ export default function StudentsTab({ students, plans, token, onRefresh }: Props
   const [confirm, setConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ nome: '', email: '', senha: '', plano_id: '' });
+  const [search, setSearch] = useState('');
 
   const openCreate = () => { setEditing(null); setForm({ nome: '', email: '', senha: '', plano_id: '' }); setModal(true); };
   const openEdit = (s: any) => { setEditing(s); setForm({ nome: s.nome, email: s.email, senha: '', plano_id: '' }); setModal(true); };
@@ -66,6 +67,12 @@ export default function StudentsTab({ students, plans, token, onRefresh }: Props
 
   const planOptions = plans.map((p: any) => ({ id: p.id, label: `${p.nome} - R$${p.valor}` }));
 
+  const filtered = students.filter((st: any) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (st.nome || '').toLowerCase().includes(q) || (st.email || '').toLowerCase().includes(q);
+  });
+
   return (
     <View style={s.section}>
       <View style={s.row}>
@@ -73,7 +80,24 @@ export default function StudentsTab({ students, plans, token, onRefresh }: Props
         <TouchableOpacity style={s.addBtn} onPress={openCreate}><Text style={s.addText}>+ NOVO</Text></TouchableOpacity>
       </View>
 
-      {students.length === 0 ? <Text style={s.empty}>Nenhum aluno cadastrado.</Text> : students.map((st: any) => (
+      {/* Barra de pesquisa */}
+      <View style={s.searchBar}>
+        <Feather name="search" size={15} color="#555" style={{ marginRight: 8 }} />
+        <TextInput
+          style={s.searchInput}
+          placeholder="Pesquisar por nome ou e-mail..."
+          placeholderTextColor="#555"
+          value={search}
+          onChangeText={setSearch}
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')}>
+            <Feather name="x" size={15} color="#555" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {filtered.length === 0 ? <Text style={s.empty}>Nenhum aluno encontrado.</Text> : filtered.map((st: any) => (
         <View key={st.id} style={s.card}>
           <View style={s.avatar}><Text style={s.avatarT}>{st.nome?.charAt(0).toUpperCase()}</Text></View>
           <View style={{ flex: 1 }}>
@@ -108,10 +132,12 @@ export default function StudentsTab({ students, plans, token, onRefresh }: Props
 
 const s = StyleSheet.create({
   section: { padding: 16 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   title: { fontSize: 22, fontWeight: '900', color: '#FFF', fontStyle: 'italic' },
   addBtn: { backgroundColor: 'rgba(255,140,0,0.15)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' },
   addText: { color: O, fontSize: 12, fontWeight: '900' },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', borderRadius: 12, borderWidth: 1, borderColor: '#333', paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
+  searchInput: { flex: 1, color: '#FFF', fontSize: 13 },
   empty: { color: '#555', fontSize: 13, textAlign: 'center', paddingVertical: 30 },
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#333', marginBottom: 8, gap: 12 },
   avatar: { width: 40, height: 40, borderRadius: 12, backgroundColor: '#222', alignItems: 'center', justifyContent: 'center' },

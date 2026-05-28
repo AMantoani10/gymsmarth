@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Feather } from '@expo/vector-icons';
-import { View, Text, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Alert, StyleSheet, TextInput } from 'react-native';
 import FormModal from '../../components/FormModal';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { createPlan, updatePlan, deletePlan } from '../../services/api';
@@ -15,6 +15,7 @@ export default function PlansTab({ plans, token, onRefresh }: Props) {
   const [confirm, setConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({ nome: '', duracao_dias: '', valor: '', descricao: '' });
+  const [search, setSearch] = useState('');
 
   const openCreate = () => { setEditing(null); setForm({ nome: '', duracao_dias: '', valor: '', descricao: '' }); setModal(true); };
   const openEdit = (p: any) => { setEditing(p); setForm({ nome: p.nome, duracao_dias: String(p.duracao_dias), valor: String(p.valor), descricao: p.descricao || '' }); setModal(true); };
@@ -44,7 +45,27 @@ export default function PlansTab({ plans, token, onRefresh }: Props) {
         <Text style={s.title}>Planos ({plans.length})</Text>
         <TouchableOpacity style={s.addBtn} onPress={openCreate}><Text style={s.addText}>+ NOVO</Text></TouchableOpacity>
       </View>
-      {plans.length === 0 ? <Text style={s.empty}>Nenhum plano cadastrado.</Text> : plans.map((p: any) => (
+
+      {/* Barra de pesquisa */}
+      <View style={s.searchBar}>
+        <Feather name="search" size={15} color="#555" style={{ marginRight: 8 }} />
+        <TextInput
+          style={s.searchInput}
+          placeholder="Pesquisar por nome do plano..."
+          placeholderTextColor="#555"
+          value={search}
+          onChangeText={setSearch}
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')}>
+            <Feather name="x" size={15} color="#555" />
+          </TouchableOpacity>
+        )}
+      </View>
+
+      {plans.filter((p: any) => !search.trim() || (p.nome || '').toLowerCase().includes(search.toLowerCase())).length === 0
+        ? <Text style={s.empty}>Nenhum plano encontrado.</Text>
+        : plans.filter((p: any) => !search.trim() || (p.nome || '').toLowerCase().includes(search.toLowerCase())).map((p: any) => (
         <View key={p.id} style={s.card}>
           <View style={{ flex: 1 }}>
             <Text style={s.name}>{p.nome}</Text>
@@ -73,10 +94,12 @@ export default function PlansTab({ plans, token, onRefresh }: Props) {
 
 const s = StyleSheet.create({
   section: { padding: 16 },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   title: { fontSize: 22, fontWeight: '900', color: '#FFF', fontStyle: 'italic' },
   addBtn: { backgroundColor: 'rgba(255,140,0,0.15)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' },
   addText: { color: O, fontSize: 12, fontWeight: '900' },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', borderRadius: 12, borderWidth: 1, borderColor: '#333', paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
+  searchInput: { flex: 1, color: '#FFF', fontSize: 13 },
   empty: { color: '#555', fontSize: 13, textAlign: 'center', paddingVertical: 30 },
   card: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', padding: 14, borderRadius: 14, borderWidth: 1, borderColor: '#333', marginBottom: 8, gap: 10 },
   name: { color: '#FFF', fontSize: 15, fontWeight: '800' },

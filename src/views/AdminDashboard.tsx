@@ -34,6 +34,11 @@ export function AdminDashboard({ onLogout, user, token }: Props) {
   const [formData, setFormData] = useState<any>({});
   const [loadingAction, setLoadingAction] = useState(false);
   const [examSearch, setExamSearch] = useState('');
+  const [studentSearch, setStudentSearch] = useState('');
+  const [planSearch, setPlanSearch] = useState('');
+  const [workoutSearch, setWorkoutSearch] = useState('');
+  const [studentPickerSearch, setStudentPickerSearch] = useState('');
+  const [studentPickerOpen, setStudentPickerOpen] = useState(false);
   const [selectedExam, setSelectedExam] = useState<any>(null);
   const [hasUnseenExams, setHasUnseenExams] = useState(false);
   const [unseenCount, setUnseenCount] = useState(0);
@@ -446,10 +451,30 @@ export function AdminDashboard({ onLogout, user, token }: Props) {
                    <Plus size={16} /> Novo Aluno
                  </button>
                </div>
+               {/* Barra de pesquisa */}
+               <div className="relative mb-5">
+                 <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                 <input
+                   id="student-search"
+                   type="text"
+                   placeholder="Pesquisar por nome ou e-mail..."
+                   value={studentSearch}
+                   onChange={e => setStudentSearch(e.target.value)}
+                   className="w-full bg-[#1A1A1A] text-sm text-white pl-11 pr-4 py-3 rounded-xl border border-[#333] focus:border-[#FF8C00] outline-none placeholder-gray-600"
+                 />
+               </div>
                {/* List */}
                <div className="space-y-3">
-                 {data.students?.length === 0 && <p className="text-gray-500 text-sm">Nenhum aluno encontrado.</p>}
-                 {data.students?.map((s: any) => (
+                 {data.students?.filter((s: any) => {
+                   if (!studentSearch.trim()) return true;
+                   const t = studentSearch.toLowerCase();
+                   return (s.nome || '').toLowerCase().includes(t) || (s.email || '').toLowerCase().includes(t);
+                 }).length === 0 && <p className="text-gray-500 text-sm">Nenhum aluno encontrado.</p>}
+                 {data.students?.filter((s: any) => {
+                   if (!studentSearch.trim()) return true;
+                   const t = studentSearch.toLowerCase();
+                   return (s.nome || '').toLowerCase().includes(t) || (s.email || '').toLowerCase().includes(t);
+                 }).map((s: any) => (
                     <div key={s.id} onClick={() => { setFormData(s); setCreateType('student'); }} className="bg-[#1A1A1A] p-4 rounded-xl border border-[#333] flex justify-between items-center cursor-pointer hover:bg-[#222]">
                        <div>
                          <p className="font-bold">{s.nome}</p>
@@ -472,9 +497,27 @@ export function AdminDashboard({ onLogout, user, token }: Props) {
                    <Plus size={16} /> Novo Plano
                  </button>
                </div>
+               {/* Barra de pesquisa */}
+               <div className="relative mb-5">
+                 <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                 <input
+                   id="plan-search"
+                   type="text"
+                   placeholder="Pesquisar por nome do plano..."
+                   value={planSearch}
+                   onChange={e => setPlanSearch(e.target.value)}
+                   className="w-full bg-[#1A1A1A] text-sm text-white pl-11 pr-4 py-3 rounded-xl border border-[#333] focus:border-[#FF8C00] outline-none placeholder-gray-600"
+                 />
+               </div>
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                 {data.plans?.length === 0 && <p className="text-gray-500 text-sm">Nenhum plano cadastrado.</p>}
-                 {data.plans?.map((p: any) => (
+                 {data.plans?.filter((p: any) => {
+                   if (!planSearch.trim()) return true;
+                   return (p.nome || '').toLowerCase().includes(planSearch.toLowerCase());
+                 }).length === 0 && <p className="text-gray-500 text-sm">Nenhum plano encontrado.</p>}
+                 {data.plans?.filter((p: any) => {
+                   if (!planSearch.trim()) return true;
+                   return (p.nome || '').toLowerCase().includes(planSearch.toLowerCase());
+                 }).map((p: any) => (
                     <div key={p.id} onClick={() => { setFormData(p); setCreateType('plan'); }} className="bg-[#1A1A1A] p-5 rounded-2xl border border-gray-800 cursor-pointer hover:bg-[#222]">
                        <h3 className="font-bold text-lg mb-1">{p.nome}</h3>
                        <p className="text-xs text-gray-500 mb-4">{p.duracao_dias} dias</p>
@@ -501,9 +544,37 @@ export function AdminDashboard({ onLogout, user, token }: Props) {
                    <Plus size={16} /> Novo Treino
                  </button>
                </div>
+               {/* Barra de pesquisa */}
+               <div className="relative mb-5">
+                 <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                 <input
+                   id="workout-search"
+                   type="text"
+                   placeholder="Pesquisar por nome, objetivo ou aluno..."
+                   value={workoutSearch}
+                   onChange={e => setWorkoutSearch(e.target.value)}
+                   className="w-full bg-[#1A1A1A] text-sm text-white pl-11 pr-4 py-3 rounded-xl border border-[#333] focus:border-[#FF8C00] outline-none placeholder-gray-600"
+                 />
+               </div>
                <div className="space-y-4">
-                 {data.workouts?.length === 0 && <p className="text-gray-500 text-sm">Nenhum treino criado.</p>}
-                 {data.workouts?.map((t: any) => (
+                 {data.workouts?.filter((t: any) => {
+                   if (!workoutSearch.trim()) return true;
+                   const q = workoutSearch.toLowerCase();
+                   return (
+                     (t.nome || '').toLowerCase().includes(q) ||
+                     (t.objetivo || '').toLowerCase().includes(q) ||
+                     (t.aluno?.nome || '').toLowerCase().includes(q)
+                   );
+                 }).length === 0 && <p className="text-gray-500 text-sm">Nenhum treino encontrado.</p>}
+                 {data.workouts?.filter((t: any) => {
+                   if (!workoutSearch.trim()) return true;
+                   const q = workoutSearch.toLowerCase();
+                   return (
+                     (t.nome || '').toLowerCase().includes(q) ||
+                     (t.objetivo || '').toLowerCase().includes(q) ||
+                     (t.aluno?.nome || '').toLowerCase().includes(q)
+                   );
+                 }).map((t: any) => (
                    <div key={t.id} onClick={() => { 
                       const parsedTreino = {
                          ...t,
@@ -1100,12 +1171,81 @@ export function AdminDashboard({ onLogout, user, token }: Props) {
 
               {createType === 'workout' && (
                 <div className="space-y-4">
-                  <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Selecionar Aluno</label>
-                    <select required className="mt-1 w-full bg-[#1A1A1A] rounded-xl p-4 text-sm focus:border-[#FF8C00] border border-[#333] outline-none text-white focus:bg-[#222] transition-colors cursor-pointer" value={formData.aluno_id || ''} onChange={e => setFormData({...formData, aluno_id: e.target.value})}>
-                      <option value="" disabled>Selecione um aluno...</option>
-                      {data.students?.map((s: any) => <option key={s.id} value={s.id}>{s.nome}</option>)}
-                    </select>
+                  <div className="relative">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1 block mb-1">Vincular Aluno</label>
+                    {/* Searchable student picker */}
+                    {(() => {
+                      const selectedStudent = data.students?.find((s: any) => s.id === formData.aluno_id);
+                      const filteredStudents = data.students?.filter((s: any) => {
+                        if (!studentPickerSearch.trim()) return true;
+                        return (s.nome || '').toLowerCase().includes(studentPickerSearch.toLowerCase());
+                      }) || [];
+                      return (
+                        <div className="relative">
+                          <div
+                            className="mt-1 w-full bg-[#1A1A1A] rounded-xl px-4 py-3 text-sm border border-[#333] focus-within:border-[#FF8C00] flex items-center gap-2 cursor-text transition-colors"
+                            onClick={() => { setStudentPickerOpen(true); }}
+                          >
+                            <Search size={14} className="text-gray-500 shrink-0" />
+                            {selectedStudent && !studentPickerOpen ? (
+                              <>
+                                <span className="flex-1 text-white font-bold truncate">{selectedStudent.nome}</span>
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); setFormData({...formData, aluno_id: ''}); setStudentPickerSearch(''); setStudentPickerOpen(false); }}
+                                  className="text-gray-500 hover:text-red-400 transition-colors"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </>
+                            ) : (
+                              <input
+                                id="student-picker-input"
+                                autoFocus={studentPickerOpen}
+                                type="text"
+                                placeholder={selectedStudent ? selectedStudent.nome : 'Pesquisar aluno por nome...'}
+                                value={studentPickerSearch}
+                                onChange={e => { setStudentPickerSearch(e.target.value); setStudentPickerOpen(true); }}
+                                onFocus={() => setStudentPickerOpen(true)}
+                                className="flex-1 bg-transparent outline-none text-white placeholder-gray-600 text-sm"
+                              />
+                            )}
+                          </div>
+                          {studentPickerOpen && (
+                            <>
+                              {/* Backdrop to close */}
+                              <div className="fixed inset-0 z-40" onClick={() => { setStudentPickerOpen(false); setStudentPickerSearch(''); }} />
+                              <div className="absolute top-full left-0 right-0 z-50 mt-1 bg-[#1A1A1A] border border-[#333] rounded-xl overflow-hidden shadow-2xl max-h-52 overflow-y-auto">
+                                {/* None option */}
+                                <button
+                                  type="button"
+                                  onClick={() => { setFormData({...formData, aluno_id: ''}); setStudentPickerOpen(false); setStudentPickerSearch(''); }}
+                                  className="w-full text-left px-4 py-3 text-sm text-gray-500 hover:bg-[#222] border-b border-[#333] italic"
+                                >
+                                  Nenhum aluno
+                                </button>
+                                {filteredStudents.length === 0 && (
+                                  <p className="px-4 py-3 text-sm text-gray-600 italic">Nenhum aluno encontrado.</p>
+                                )}
+                                {filteredStudents.map((s: any) => (
+                                  <button
+                                    key={s.id}
+                                    type="button"
+                                    onClick={() => { setFormData({...formData, aluno_id: s.id}); setStudentPickerOpen(false); setStudentPickerSearch(''); }}
+                                    className={`w-full text-left px-4 py-3 text-sm font-bold hover:bg-[#222] transition-colors flex items-center gap-2 ${
+                                      formData.aluno_id === s.id ? 'text-[#FF8C00] bg-[#FF8C00]/5' : 'text-white'
+                                    }`}
+                                  >
+                                    {formData.aluno_id === s.id && <span className="w-1.5 h-1.5 rounded-full bg-[#FF8C00] shrink-0" />}
+                                    {s.nome}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div>
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-widest pl-1">Nome do Treino</label>

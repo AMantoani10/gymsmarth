@@ -18,9 +18,12 @@ interface Props {
 export default function WorkoutsTab({ workouts, students, token, onRefresh, actionData, onActionConsumed }: Props) {
   const [confirm, setConfirm] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
   
   const [modalVisible, setModalVisible] = useState(false);
   const [formData, setFormData] = useState<any>(null);
+  const [studentPickerVisible, setStudentPickerVisible] = useState(false);
+  const [studentPickerSearch, setStudentPickerSearch] = useState('');
   
   const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 
@@ -32,26 +35,40 @@ export default function WorkoutsTab({ workouts, students, token, onRefresh, acti
   };
 
   const openCreate = (alunoId: string = '') => {
+    const today = new Date();
+    const dd = String(today.getDate()).padStart(2,'0');
+    const mm = String(today.getMonth()+1).padStart(2,'0');
+    const yyyy = today.getFullYear();
     setFormData({
       id: null,
       nome: '',
       objetivo: '',
       aluno_id: alunoId,
-      data_inicio: '',
+      data_inicio: `${dd}/${mm}/${yyyy}`,
       data_fim: '',
       sessoes: [{ nome: 'Treino A', ordem_sequencial: 1, dia_preferencial: '', exercicios: [{ nome: '', series: '', reps: '', descanso: '' }] }]
     });
+    setStudentPickerSearch('');
     setModalVisible(true);
   };
 
   const openEdit = (t: any) => {
+    // Convert ISO date to DD/MM/AAAA for display
+    const toDisplay = (iso: string) => {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const dd = String(d.getUTCDate()).padStart(2,'0');
+      const mm = String(d.getUTCMonth()+1).padStart(2,'0');
+      const yyyy = d.getUTCFullYear();
+      return `${dd}/${mm}/${yyyy}`;
+    };
     setFormData({
       id: t.id,
       nome: t.nome || '',
       objetivo: t.objetivo || '',
       aluno_id: t.aluno_id || '',
-      data_inicio: t.data_inicio ? t.data_inicio.slice(0, 10) : '',
-      data_fim: t.data_fim ? t.data_fim.slice(0, 10) : '',
+      data_inicio: toDisplay(t.data_inicio || ''),
+      data_fim: toDisplay(t.data_fim || ''),
       sessoes: t.sessoes?.map((s: any) => ({
         ...s,
         dia_preferencial: s.dia_preferencial?.toString() || '',
@@ -63,6 +80,7 @@ export default function WorkoutsTab({ workouts, students, token, onRefresh, acti
         })()
       })) || []
     });
+    setStudentPickerSearch('');
     setModalVisible(true);
   };
 
@@ -86,16 +104,34 @@ export default function WorkoutsTab({ workouts, students, token, onRefresh, acti
     }
   }, [actionData, workouts]);
 
+  // Mask helper: formats typed text into DD/MM/AAAA
+  const maskDate = (text: string): string => {
+    const digits = text.replace(/\D/g, '').slice(0, 8);
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 4) return `${digits.slice(0,2)}/${digits.slice(2)}`;
+    return `${digits.slice(0,2)}/${digits.slice(2,4)}/${digits.slice(4)}`;
+  };
+
+  // Parse DD/MM/AAAA => YYYY-MM-DD for the backend
+  const parseDateBR = (br: string): string | null => {
+    const parts = br.split('/');
+    if (parts.length !== 3 || parts[2].length !== 4) return null;
+    return `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+  };
+
   const handleSave = async () => {
     try {
       setLoading(true);
       const payload = { ...formData };
       
       // Formatar dados pro backend
-      if (payload.data_inicio) payload.data_inicio = new Date(payload.data_inicio + 'T00:00:00Z').toISOString();
+      const isoStart = payload.data_inicio ? parseDateBR(payload.data_inicio) : null;
+      const isoEnd   = payload.data_fim   ? parseDateBR(payload.data_fim)   : null;
+
+      if (isoStart) payload.data_inicio = new Date(isoStart + 'T00:00:00Z').toISOString();
       else delete payload.data_inicio;
       
-      if (payload.data_fim) payload.data_fim = new Date(payload.data_fim + 'T00:00:00Z').toISOString();
+      if (isoEnd) payload.data_fim = new Date(isoEnd + 'T00:00:00Z').toISOString();
       else delete payload.data_fim;
 
       payload.sessoes = (payload.sessoes || []).map((s: any, idx: number) => ({
@@ -106,7 +142,7 @@ export default function WorkoutsTab({ workouts, students, token, onRefresh, acti
         lista_exercicios: JSON.stringify(s.exercicios.filter((ex: any) => ex.nome.trim() !== ''))
       }));
 
-      if (!payload.aluno_id) payload.aluno_id = null; // Backend aceita null se nao associado
+      if (!payload.aluno_id) payload.aluno_id = null;
 
       if (payload.id) {
         await updateWorkout(payload.id, payload, token);
@@ -136,8 +172,33 @@ export default function WorkoutsTab({ workouts, students, token, onRefresh, acti
           <Text style={s.btnNovoText}>+ NOVO</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Barra de pesquisa */}
+      <View style={s.searchBar}>
+        <Feather name="search" size={15} color="#555" style={{ marginRight: 8 }} />
+        <TextInput
+          style={s.searchInput}
+          placeholder="Pesquisar por nome, objetivo ou aluno..."
+          placeholderTextColor="#555"
+          value={search}
+          onChangeText={setSearch}
+        />
+        {search.length > 0 && (
+          <TouchableOpacity onPress={() => setSearch('')}>
+            <Feather name="x" size={15} color="#555" />
+          </TouchableOpacity>
+        )}
+      </View>
       
-      {workouts.length === 0 ? <Text style={s.empty}>Nenhum treino criado.</Text> : workouts.map((t: any) => (
+      {(() => {
+        const q = search.toLowerCase();
+        const filtered = workouts.filter((t: any) =>
+          !search.trim() ||
+          (t.nome || '').toLowerCase().includes(q) ||
+          (t.objetivo || '').toLowerCase().includes(q) ||
+          (t.aluno?.nome || '').toLowerCase().includes(q)
+        );
+        return filtered.length === 0 ? <Text style={s.empty}>Nenhum treino encontrado.</Text> : filtered.map((t: any) => (
         <TouchableOpacity key={t.id} style={s.card} onPress={() => openEdit(t)}>
           <View style={s.cardHeader}>
             <View style={{ flex: 1 }}>
@@ -160,7 +221,8 @@ export default function WorkoutsTab({ workouts, students, token, onRefresh, acti
             })}
           </ScrollView>
         </TouchableOpacity>
-      ))}
+      ));
+      })()}
       <ConfirmDialog visible={!!confirm} title="Excluir Treino" message="Tem certeza que deseja excluir este treino?"
         loading={loading} onCancel={() => setConfirm(null)} onConfirm={handleDelete} />
 
@@ -183,33 +245,125 @@ export default function WorkoutsTab({ workouts, students, token, onRefresh, acti
                 <Text style={sm.label}>Objetivo</Text>
                 <TextInput style={sm.input} value={formData.objetivo} onChangeText={t => setFormData({...formData, objetivo: t})} placeholder="Ex: Ganho de Massa" placeholderTextColor="#666" />
                 
-                <Text style={sm.label}>Vincular Aluno (Opcional)</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 16 }}>
-                  <TouchableOpacity 
-                    style={[sm.chipSel, formData.aluno_id === '' && sm.chipSelActive]}
-                    onPress={() => setFormData({...formData, aluno_id: ''})}
-                  >
-                    <Text style={[sm.chipSelText, formData.aluno_id === '' && sm.chipSelTextActive]}>Nenhum</Text>
-                  </TouchableOpacity>
-                  {students.map((st: any) => (
-                    <TouchableOpacity 
-                      key={st.id}
-                      style={[sm.chipSel, formData.aluno_id === st.id && sm.chipSelActive]}
-                      onPress={() => setFormData({...formData, aluno_id: st.id})}
-                    >
-                      <Text style={[sm.chipSelText, formData.aluno_id === st.id && sm.chipSelTextActive]}>{st.nome}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
+                <Text style={sm.label}>Vincular Aluno</Text>
+                {/* Searchable student picker */}
+                {(() => {
+                  const selected = students.find((st: any) => st.id === formData.aluno_id);
+                  const filtered = students.filter((st: any) => {
+                    if (!studentPickerSearch.trim()) return true;
+                    return (st.nome || '').toLowerCase().includes(studentPickerSearch.toLowerCase());
+                  });
+                  return (
+                    <View style={{ marginBottom: 16 }}>
+                      {/* Trigger / display field */}
+                      <TouchableOpacity
+                        style={sm.pickerTrigger}
+                        onPress={() => setStudentPickerVisible(true)}
+                        activeOpacity={0.8}
+                      >
+                        <Text style={selected ? sm.pickerTriggerText : sm.pickerTriggerPlaceholder}>
+                          {selected ? selected.nome : 'Toque para selecionar aluno...'}
+                        </Text>
+                        {selected ? (
+                          <TouchableOpacity
+                            onPress={(e) => { setFormData({...formData, aluno_id: ''}); setStudentPickerSearch(''); }}
+                            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                          >
+                            <Text style={{ color: '#EF4444', fontSize: 16, fontWeight: '900' }}>×</Text>
+                          </TouchableOpacity>
+                        ) : (
+                          <Text style={{ color: '#555', fontSize: 12 }}>▼</Text>
+                        )}
+                      </TouchableOpacity>
+
+                      {/* Picker Modal */}
+                      <Modal
+                        visible={studentPickerVisible}
+                        animationType="slide"
+                        presentationStyle="formSheet"
+                        onRequestClose={() => { setStudentPickerVisible(false); setStudentPickerSearch(''); }}
+                      >
+                        <View style={sm.pickerModal}>
+                          <View style={sm.pickerHeader}>
+                            <Text style={sm.pickerTitle}>SELECIONAR ALUNO</Text>
+                            <TouchableOpacity onPress={() => { setStudentPickerVisible(false); setStudentPickerSearch(''); }}>
+                              <Text style={sm.closeText}>FECHAR</Text>
+                            </TouchableOpacity>
+                          </View>
+                          {/* Search input */}
+                          <View style={sm.pickerSearch}>
+                            <TextInput
+                              style={sm.pickerSearchInput}
+                              placeholder="Pesquisar por nome..."
+                              placeholderTextColor="#555"
+                              value={studentPickerSearch}
+                              onChangeText={setStudentPickerSearch}
+                              autoFocus
+                            />
+                            {studentPickerSearch.length > 0 && (
+                              <TouchableOpacity onPress={() => setStudentPickerSearch('')}>
+                                <Text style={{ color: '#555', fontSize: 16 }}>×</Text>
+                              </TouchableOpacity>
+                            )}
+                          </View>
+                          <ScrollView style={{ flex: 1 }}>
+                            {/* None option */}
+                            <TouchableOpacity
+                              style={[sm.pickerItem, formData.aluno_id === '' && sm.pickerItemActive]}
+                              onPress={() => { setFormData({...formData, aluno_id: ''}); setStudentPickerVisible(false); setStudentPickerSearch(''); }}
+                            >
+                              <Text style={[sm.pickerItemText, formData.aluno_id === '' && sm.pickerItemTextActive]}>
+                                Nenhum aluno
+                              </Text>
+                            </TouchableOpacity>
+                            {filtered.length === 0 && studentPickerSearch.trim() !== '' && (
+                              <Text style={{ color: '#555', fontSize: 13, textAlign: 'center', paddingVertical: 20 }}>Nenhum aluno encontrado.</Text>
+                            )}
+                            {filtered.map((st: any) => (
+                              <TouchableOpacity
+                                key={st.id}
+                                style={[sm.pickerItem, formData.aluno_id === st.id && sm.pickerItemActive]}
+                                onPress={() => { setFormData({...formData, aluno_id: st.id}); setStudentPickerVisible(false); setStudentPickerSearch(''); }}
+                              >
+                                <Text style={[sm.pickerItemText, formData.aluno_id === st.id && sm.pickerItemTextActive]}>
+                                  {st.nome}
+                                </Text>
+                                {formData.aluno_id === st.id && (
+                                  <Text style={{ color: ORANGE, fontSize: 14, fontWeight: '900' }}>✓</Text>
+                                )}
+                              </TouchableOpacity>
+                            ))}
+                          </ScrollView>
+                        </View>
+                      </Modal>
+                    </View>
+                  );
+                })()}
 
                 <View style={{ flexDirection: 'row', gap: 10 }}>
                   <View style={{ flex: 1 }}>
-                    <Text style={sm.label}>Data Início (AAAA-MM-DD)</Text>
-                    <TextInput style={sm.input} value={formData.data_inicio} onChangeText={t => setFormData({...formData, data_inicio: t})} placeholder="YYYY-MM-DD" placeholderTextColor="#666" />
+                    <Text style={sm.label}>Data Início (DD/MM/AAAA)</Text>
+                    <TextInput
+                      style={sm.input}
+                      value={formData.data_inicio}
+                      onChangeText={t => setFormData({...formData, data_inicio: maskDate(t)})}
+                      placeholder="DD/MM/AAAA"
+                      placeholderTextColor="#666"
+                      keyboardType="numeric"
+                      maxLength={10}
+                    />
                   </View>
                   <View style={{ flex: 1 }}>
-                    <Text style={sm.label}>Data Fim (AAAA-MM-DD)</Text>
-                    <TextInput style={sm.input} value={formData.data_fim} onChangeText={t => setFormData({...formData, data_fim: t})} placeholder="YYYY-MM-DD" placeholderTextColor="#666" />
+                    <Text style={sm.label}>Data Fim (DD/MM/AAAA)</Text>
+                    <TextInput
+                      style={sm.input}
+                      value={formData.data_fim}
+                      onChangeText={t => setFormData({...formData, data_fim: maskDate(t)})}
+                      placeholder="DD/MM/AAAA"
+                      placeholderTextColor="#666"
+                      keyboardType="numeric"
+                      maxLength={10}
+                    />
                   </View>
                 </View>
               </View>
@@ -321,11 +475,13 @@ export default function WorkoutsTab({ workouts, students, token, onRefresh, acti
 
 const s = StyleSheet.create({
   section: { padding: 16 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   title: { fontSize: 22, fontWeight: '900', color: '#FFF', fontStyle: 'italic' },
   sub: { fontSize: 12, color: '#666', marginTop: 4 },
   btnNovo: { backgroundColor: 'rgba(255,140,0,0.15)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' },
   btnNovoText: { color: ORANGE, fontSize: 12, fontWeight: '900' },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', borderRadius: 12, borderWidth: 1, borderColor: '#333', paddingHorizontal: 12, paddingVertical: 10, marginBottom: 14 },
+  searchInput: { flex: 1, color: '#FFF', fontSize: 13 },
   empty: { color: '#555', fontSize: 13, textAlign: 'center', paddingVertical: 30 },
   card: { backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333', borderRadius: 16, padding: 16, marginBottom: 10 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
@@ -362,5 +518,21 @@ const sm = StyleSheet.create({
   exListHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 10, marginBottom: 6 },
   exRow: { flexDirection: 'row', gap: 6, marginBottom: 6 },
   btnSave: { backgroundColor: ORANGE, paddingVertical: 16, borderRadius: 12, alignItems: 'center', marginTop: 10 },
-  btnSaveText: { color: '#000', fontSize: 14, fontWeight: '900', letterSpacing: 1 }
+  btnSaveText: { color: '#000', fontSize: 14, fontWeight: '900', letterSpacing: 1 },
+  // Picker trigger
+  pickerTrigger: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#222', borderWidth: 1, borderColor: '#333', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 16 },
+  pickerTriggerText: { color: '#FFF', fontSize: 14, fontWeight: '700', flex: 1 },
+  pickerTriggerPlaceholder: { color: '#555', fontSize: 14, flex: 1 },
+  // Picker modal
+  pickerModal: { flex: 1, backgroundColor: '#121212', paddingTop: 20 },
+  pickerHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 16, borderBottomWidth: 1, borderBottomColor: '#333' },
+  pickerTitle: { fontSize: 16, fontWeight: '900', color: ORANGE, fontStyle: 'italic' },
+  // Picker search bar
+  pickerSearch: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', borderRadius: 12, borderWidth: 1, borderColor: '#333', paddingHorizontal: 14, paddingVertical: 10, margin: 16 },
+  pickerSearchInput: { flex: 1, color: '#FFF', fontSize: 14 },
+  // Picker list items
+  pickerItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#1E1E1E' },
+  pickerItemActive: { backgroundColor: 'rgba(255,140,0,0.08)' },
+  pickerItemText: { color: '#AAA', fontSize: 15, fontWeight: '600' },
+  pickerItemTextActive: { color: ORANGE, fontWeight: '800' },
 });
