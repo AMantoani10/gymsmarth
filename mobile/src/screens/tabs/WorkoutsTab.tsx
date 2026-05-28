@@ -321,11 +321,11 @@ export default function WorkoutsTab({ workouts, students, token, onRefresh, acti
 
 const s = StyleSheet.create({
   section: { padding: 16 },
-  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   title: { fontSize: 22, fontWeight: '900', color: '#FFF', fontStyle: 'italic' },
   sub: { fontSize: 12, color: '#666', marginTop: 4 },
-  btnNovo: { backgroundColor: ORANGE, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-  btnNovoText: { color: '#000', fontWeight: '900', fontSize: 11 },
+  btnNovo: { backgroundColor: 'rgba(255,140,0,0.15)', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,140,0,0.3)' },
+  btnNovoText: { color: ORANGE, fontSize: 12, fontWeight: '900' },
   empty: { color: '#555', fontSize: 13, textAlign: 'center', paddingVertical: 30 },
   card: { backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333', borderRadius: 16, padding: 16, marginBottom: 10 },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },

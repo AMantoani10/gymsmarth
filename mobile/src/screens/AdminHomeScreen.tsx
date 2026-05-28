@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  RefreshControl, ActivityIndicator, Dimensions,
+  RefreshControl, ActivityIndicator, Dimensions, Alert, Modal, TextInput
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAuth } from '../contexts/AuthContext';
 import {
-  fetchStudents, fetchPlans, fetchWorkouts, fetchNotifications, fetchLogs,
+  fetchStudents, fetchPlans, fetchWorkouts, fetchNotifications, fetchLogs, updateProfile
 } from '../services/api';
 import StudentsTab from './tabs/StudentsTab';
 import PlansTab from './tabs/PlansTab';
@@ -30,6 +30,10 @@ export default function AdminHomeScreen() {
   const [logs, setLogs] = useState<any[]>([]);
   const [logDays, setLogDays] = useState(7);
   const [actionData, setActionData] = useState<{type: 'edit'|'create'|'adapt', id?: string, alunoId?: string} | null>(null);
+
+  const [settingsModal, setSettingsModal] = useState(false);
+  const [formData, setFormData] = useState({ nome: user?.nome || '', email: user?.email || '', senha: '' });
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchAllData = useCallback(async () => {
     try {
@@ -101,8 +105,8 @@ export default function AdminHomeScreen() {
           <Text style={st.headerName}>{user?.nome?.split(' ')[0].toUpperCase()}</Text>
           <View style={st.adminBadge}><Text style={st.adminBadgeText}>ADMIN</Text></View>
         </View>
-        <TouchableOpacity onPress={signOut} style={st.logoutBtn}>
-          <Text style={st.logoutText}>SAIR</Text>
+        <TouchableOpacity style={st.profileBtn} onPress={() => { setFormData({ nome: user?.nome || '', email: user?.email || '', senha: '' }); setSettingsModal(true); }}>
+           <Feather name="user" size={18} color={ORANGE} />
         </TouchableOpacity>
       </View>
 
@@ -210,8 +214,52 @@ export default function AdminHomeScreen() {
         {tab === 'workouts' && <WorkoutsTab workouts={workouts} students={students} token={token} onRefresh={onRefresh} actionData={actionData} onActionConsumed={() => setActionData(null)} />}
         {tab === 'notifications' && <NotificationsTab notifications={notifications} token={token} onRefresh={onRefresh} onOpenWorkout={(type, id, alunoId) => { setTab('workouts'); setActionData({ type, id, alunoId }); }} />}
 
+        <TouchableOpacity onPress={signOut} style={st.logoutBtnApp}>
+          <Text style={st.logoutBtnAppText}>SAIR DA CONTA</Text>
+        </TouchableOpacity>
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Settings Modal */}
+      <Modal visible={settingsModal} animationType="fade" transparent onRequestClose={() => setSettingsModal(false)}>
+        <View style={st.overlayContainer}>
+          <View style={st.overlayContent}>
+             <View style={st.modalHeader}>
+               <Text style={st.modalTitle}>CONFIGURAÇÕES</Text>
+               <TouchableOpacity onPress={() => setSettingsModal(false)}><Text style={st.modalCloseText}>VOLTAR</Text></TouchableOpacity>
+             </View>
+
+             <Text style={st.inputLabel}>Seu Nome</Text>
+             <TextInput style={st.input} value={formData.nome} onChangeText={t => setFormData({...formData, nome: t})} />
+
+             <Text style={st.inputLabel}>E-mail</Text>
+             <TextInput style={st.input} value={formData.email} onChangeText={t => setFormData({...formData, email: t})} keyboardType="email-address" autoCapitalize="none" />
+
+             <Text style={st.inputLabel}>Nova Senha</Text>
+             <TextInput style={st.input} placeholder="Digite para alterar" placeholderTextColor="#666" secureTextEntry value={formData.senha} onChangeText={t => setFormData({...formData, senha: t})} />
+
+             <TouchableOpacity 
+               style={[st.btnPrimary, {marginTop: 20}, submitting && {opacity: 0.5}]}
+               disabled={submitting}
+               onPress={async () => {
+                 setSubmitting(true);
+                 try {
+                   const payload: any = {...formData};
+                   if (!payload.senha) delete payload.senha;
+                   await updateProfile(payload, token);
+                   Alert.alert('Sucesso', 'Perfil atualizado! Faça login novamente para ver as alterações.');
+                   setSettingsModal(false);
+                   signOut();
+                 } catch(e: any) { Alert.alert('Erro', e.message); }
+                 setSubmitting(false);
+               }}
+             >
+               <Text style={st.btnPrimaryText}>{submitting ? 'SALVANDO...' : 'SALVAR ALTERAÇÕES'}</Text>
+             </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
     </View>
   );
 }
@@ -223,8 +271,7 @@ const st = StyleSheet.create({
   headerName: { fontSize: 24, fontWeight: '900', color: ORANGE, fontStyle: 'italic', marginTop: 2 },
   adminBadge: { backgroundColor: 'rgba(255,255,255,0.1)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4, marginTop: 6, alignSelf: 'flex-start' },
   adminBadgeText: { color: '#FFF', fontSize: 9, fontWeight: '800', letterSpacing: 1 },
-  logoutBtn: { backgroundColor: 'rgba(239,68,68,0.1)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' },
-  logoutText: { color: '#EF4444', fontSize: 11, fontWeight: '800' },
+  profileBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: '#1A1A1A', borderWidth: 2, borderColor: ORANGE, alignItems: 'center', justifyContent: 'center' },
   tabBar: { maxHeight: 52, backgroundColor: '#121212' },
   tabBarContent: { paddingHorizontal: 14, gap: 6, alignItems: 'center', paddingVertical: 6 },
   tabItem: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12, backgroundColor: '#1A1A1A' },
@@ -266,4 +313,15 @@ const st = StyleSheet.create({
   logContent: { flex: 1 },
   logDesc: { fontSize: 12, fontWeight: '700', color: '#DDD' },
   logMeta: { fontSize: 10, color: '#555', marginTop: 2 },
+  logoutBtnApp: { paddingVertical: 16, alignItems: 'center', marginTop: 20 },
+  logoutBtnAppText: { color: '#666', fontSize: 12, fontWeight: '900', letterSpacing: 2 },
+  overlayContainer: { flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 20 },
+  overlayContent: { backgroundColor: '#121212', borderWidth: 1, borderColor: '#333', borderRadius: 24, padding: 24, width: '100%', maxWidth: 400 },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  modalTitle: { fontSize: 20, fontWeight: '900', color: ORANGE, fontStyle: 'italic', flex: 1 },
+  modalCloseText: { fontSize: 11, fontWeight: '800', color: '#666' },
+  inputLabel: { fontSize: 10, fontWeight: '800', color: '#666', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, paddingLeft: 4 },
+  input: { backgroundColor: '#1A1A1A', borderWidth: 1, borderColor: '#333', borderRadius: 12, padding: 14, color: '#FFF', fontSize: 14, marginBottom: 16 },
+  btnPrimary: { backgroundColor: ORANGE, paddingVertical: 18, borderRadius: 12, alignItems: 'center', marginBottom: 20 },
+  btnPrimaryText: { color: '#000', fontSize: 14, fontWeight: '900', letterSpacing: 1 },
 });
